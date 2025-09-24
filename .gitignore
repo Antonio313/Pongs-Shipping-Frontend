@@ -17,10 +17,10 @@ pids
 node_modules/
 jspm_packages/
 
-# Build outputs
-dist/
-dist-ssr/
-build/
+# Build outputs (commented out for Railway deployment)
+# dist/
+# dist-ssr/
+# build/
 *.local
 
 # Vite specific
@@ -33,6 +33,8 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+# Keep .env.example for documentation
+!.env.example
 
 # Coverage directory used by tools like istanbul
 coverage/
@@ -174,8 +176,11 @@ public/fallback-*.js.map
 .serverless/
 
 # Docker
-.dockerignore
+# .dockerignore  # Keep for Railway deployment
 docker-compose.override.yml
+# Keep Dockerfile and railway.json for deployment
+!Dockerfile
+!railway.json
 
 # Error logs
 error.log

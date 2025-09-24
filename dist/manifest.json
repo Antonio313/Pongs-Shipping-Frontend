@@ -1,0 +1,17 @@
+{
+  "name": "Pongs Shipping Company",
+  "short_name": "Pongs Shipping",
+  "description": "Professional shipping and package management services",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2ca9bc",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
