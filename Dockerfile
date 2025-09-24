@@ -24,12 +24,12 @@ RUN addgroup -g 1001 -S nodejs && \
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 
-# Expose port
-EXPOSE 4173
+# Expose port (Railway will set PORT environment variable)
+EXPOSE 8080
 
-# Health check
+# Health check using PORT environment variable
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:4173/ || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-8080}/ || exit 1
 
 # Start the application using Vite preview
 CMD ["npm", "run", "preview"]
