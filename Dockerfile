@@ -1,5 +1,5 @@
-# Multi-stage build for React frontend
-FROM node:18-alpine AS build
+# Use official Node.js runtime as base image
+FROM node:18-alpine
 
 # Set working directory
 WORKDIR /app
@@ -16,19 +16,6 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Production stage
-FROM node:18-alpine AS production
-
-# Install serve for serving static files
-RUN npm install -g serve
-
-# Set working directory
-WORKDIR /app
-
-# Copy built application from build stage
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/package.json ./
-
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
@@ -44,5 +31,5 @@ EXPOSE 4173
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:4173/ || exit 1
 
-# Start the application
-CMD ["serve", "-s", "dist", "-l", "4173", "--host", "0.0.0.0"]
+# Start the application using Vite preview
+CMD ["npm", "run", "preview"]
