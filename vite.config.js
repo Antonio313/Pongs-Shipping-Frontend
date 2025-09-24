@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
+// Railway deployment configuration
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
@@ -12,7 +13,11 @@ export default defineConfig({
   preview: {
     host: '0.0.0.0',
     port: parseInt(process.env.PORT) || 3000,
-    allowedHosts: 'all'
+    allowedHosts: [
+      'localhost',
+      '.railway.app',
+      'pongs-shipping-frontend-production.up.railway.app'
+    ]
   },
   build: {
     chunkSizeWarningLimit: 1000,
