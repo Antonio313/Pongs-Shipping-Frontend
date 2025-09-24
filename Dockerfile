@@ -1,6 +1,9 @@
 # Use official Node.js runtime as base image
 FROM node:20-alpine
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Set working directory
 WORKDIR /app
 
@@ -27,9 +30,9 @@ USER nodejs
 # Expose port (Railway will set PORT environment variable)
 EXPOSE 8080
 
-# Health check using PORT environment variable
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-8080}/ || exit 1
+# Health check using curl
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:${PORT:-8080}/ || exit 1
 
 # Start the application using Vite preview
 CMD ["npm", "run", "preview"]
