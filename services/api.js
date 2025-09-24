@@ -1,13 +1,24 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// Determine API URL based on environment
+const getApiBaseUrl = () => {
+  // In production (Railway), use the Railway backend URL
+  if (import.meta.env.PROD || import.meta.env.MODE === 'production') {
+    return 'https://pongs-shipping-backend-production.up.railway.app/api';
+  }
+
+  // In development, try environment variable first, then fallback
+  return import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Debug logging for environment variables
-console.log('🔧 Debug - Environment Variables (v2):');
+console.log('🔧 Debug - Environment Variables (v3):');
 console.log('  VITE_API_URL:', import.meta.env.VITE_API_URL);
+console.log('  MODE:', import.meta.env.MODE);
+console.log('  PROD:', import.meta.env.PROD);
 console.log('  Final API_BASE_URL:', API_BASE_URL);
-console.log('  NODE_ENV:', import.meta.env.MODE);
-console.log('  All env vars:', import.meta.env);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
