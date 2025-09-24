@@ -181,5 +181,34 @@ export const transfersAPI = {
   deleteTransfer: (id) => api.delete(`/transfers/${id}`),
 }
 
+// SuperAdmin API calls
+export const superAdminAPI = {
+  // Get dashboard overview data
+  getDashboardData: () => api.get('/superadmin/dashboard'),
+
+  // Get staff performance data
+  getStaffPerformance: (period = '7') => api.get(`/superadmin/staff-performance?period=${period}`),
+
+  // Get system overview
+  getSystemOverview: () => api.get('/superadmin/system-overview'),
+
+  // Get revenue analytics
+  getRevenueAnalytics: (period = '7') => api.get(`/superadmin/analytics/revenue?period=${period}`),
+
+  // Get activity log
+  getActivityLog: (limit = 20) => api.get(`/superadmin/activity-log?limit=${limit}`),
+
+  // Get all staff
+  getAllStaff: () => api.get('/superadmin/staff'),
+
+  // Update staff member
+  updateStaff: (staffId, data) => api.patch(`/superadmin/staff/${staffId}`, data),
+
+  // Create new staff member
+  createStaff: (data) => api.post('/superadmin/staff', data),
+
+  // Delete staff member
+  deleteStaff: (staffId) => api.delete(`/superadmin/staff/${staffId}`),
+}
 
 export default api;

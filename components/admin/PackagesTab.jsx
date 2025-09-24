@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { usePackages } from '../../context/PackagesContext';
+import { packagesAPI } from '../../services/api';
 
 function PackagesTab() {
   const { allPackages, loading, error, loadAllPackages, updatePackageStatus, deletePackage, clearError } = usePackages();
@@ -475,26 +476,14 @@ function UpdatePackageModal({ package: pkg, onClose, onUpdate, getStatusBadge })
 
     setIsUpdating(true);
     try {
-      // Call the API directly here since we need more control
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/packages/${pkg.package_id}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          status: selectedStatus,
-          finalCost: selectedStatus === 'Arrived in Jamaica' ? parseFloat(finalCost) : undefined,
-          sendEmailNotification: sendEmail
-        })
+      // Call the API using the configured service
+      const response = await packagesAPI.updatePackageStatus(pkg.package_id, {
+        status: selectedStatus,
+        finalCost: selectedStatus === 'Arrived in Jamaica' ? parseFloat(finalCost) : undefined,
+        sendEmailNotification: sendEmail
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update package');
-      }
-
-      const result = await response.json();
+      const result = response.data;
       console.log('Package updated successfully:', result);
 
       // Refresh the packages list

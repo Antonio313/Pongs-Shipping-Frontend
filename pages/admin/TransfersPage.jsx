@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { usePackages } from '../../context/PackagesContext';
 import Header from '../../src/Header';
 import Footer from '../../src/Footer';
+import { transfersAPI } from '../../services/api';
 
 function TransfersPage() {
   const { user } = useAuth();
@@ -21,15 +22,8 @@ function TransfersPage() {
 
   const loadTransferLists = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/transfers`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (response.ok) {
-        const lists = await response.json();
-        setTransferLists(lists);
-      }
+      const response = await transfersAPI.getAllTransfers();
+      setTransferLists(response.data);
     } catch (error) {
       console.error('Error loading transfer lists:', error);
     }
@@ -350,24 +344,13 @@ function CreateTransferModal({ packages, locations, onClose, onSuccess }) {
 
     setIsCreating(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/transfers`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          destination,
-          packages: selectedPackages,
-          notes
-        })
+      const response = await transfersAPI.createTransfer({
+        destination,
+        packages: selectedPackages,
+        notes
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create transfer list');
-      }
-
-      const result = await response.json();
+      const result = response.data;
       console.log('Transfer list created:', result);
       onSuccess();
 
@@ -573,23 +556,16 @@ function ViewTransferModal({ transferList, onClose, onUpdate, getStatusBadge, fo
 
   const loadTransferPackages = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/transfers/${transferList.transfer_id}/packages`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      const response = await transfersAPI.getTransferPackages(transferList.transfer_id);
+      const data = response.data;
+      setPackages(data.packages);
+
+      // Initialize checkoff status
+      const initialStatus = {};
+      data.packages.forEach(pkg => {
+        initialStatus[pkg.package_id] = pkg.checked_off || false;
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPackages(data.packages);
-
-        // Initialize checkoff status
-        const initialStatus = {};
-        data.packages.forEach(pkg => {
-          initialStatus[pkg.package_id] = pkg.checked_off || false;
-        });
-        setCheckoffStatus(initialStatus);
-      }
+      setCheckoffStatus(initialStatus);
     } catch (error) {
       console.error('Error loading transfer packages:', error);
     } finally {
@@ -601,21 +577,12 @@ function ViewTransferModal({ transferList, onClose, onUpdate, getStatusBadge, fo
     const newStatus = !checkoffStatus[packageId];
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/transfers/${transferList.transfer_id}/packages/${packageId}/checkoff`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ checked_off: newStatus })
-      });
+      await transfersAPI.updatePackageCheckoff(transferList.transfer_id, packageId, { checked_off: newStatus });
 
-      if (response.ok) {
-        setCheckoffStatus(prev => ({
-          ...prev,
-          [packageId]: newStatus
-        }));
-      }
+      setCheckoffStatus(prev => ({
+        ...prev,
+        [packageId]: newStatus
+      }));
     } catch (error) {
       console.error('Error updating checkoff status:', error);
     }
@@ -628,18 +595,8 @@ function ViewTransferModal({ transferList, onClose, onUpdate, getStatusBadge, fo
 
     setIsUpdating(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/transfers/${transferList.transfer_id}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-
-      if (response.ok) {
-        onUpdate();
-      }
+      await transfersAPI.updateTransferStatus(transferList.transfer_id, { status: newStatus });
+      onUpdate();
     } catch (error) {
       console.error('Error updating transfer status:', error);
       alert('Failed to update transfer status. Please try again.');

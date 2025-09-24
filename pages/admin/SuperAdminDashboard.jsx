@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLocation } from 'react-router-dom';
 import Header from '../../src/Header';
 import Footer from '../../src/Footer';
+import { superAdminAPI } from '../../services/api';
 
 function SuperAdminDashboard() {
   const { user } = useAuth();
@@ -59,25 +60,20 @@ function SuperAdminDashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
 
-      const [dashboardRes, performanceRes, overviewRes, revenueRes, activityRes] = await Promise.all([
-        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/superadmin/dashboard`, { headers }),
-        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/superadmin/staff-performance?period=${selectedPeriod}`, { headers }),
-        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/superadmin/system-overview`, { headers }),
-        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/superadmin/analytics/revenue?period=${selectedPeriod}`, { headers }),
-        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/superadmin/activity-log?limit=20`, { headers })
+      const [dashboardRes, performanceRes, overviewRes, revenueRes, activityRes] = await Promise.allSettled([
+        superAdminAPI.getDashboardData(),
+        superAdminAPI.getStaffPerformance(selectedPeriod),
+        superAdminAPI.getSystemOverview(),
+        superAdminAPI.getRevenueAnalytics(selectedPeriod),
+        superAdminAPI.getActivityLog(20)
       ]);
 
-      if (dashboardRes.ok) setDashboardData(await dashboardRes.json());
-      if (performanceRes.ok) setStaffPerformance(await performanceRes.json());
-      if (overviewRes.ok) setSystemOverview(await overviewRes.json());
-      if (revenueRes.ok) setRevenueAnalytics(await revenueRes.json());
-      if (activityRes.ok) setActivityLog(await activityRes.json());
+      if (dashboardRes.status === 'fulfilled') setDashboardData(dashboardRes.value.data);
+      if (performanceRes.status === 'fulfilled') setStaffPerformance(performanceRes.value.data);
+      if (overviewRes.status === 'fulfilled') setSystemOverview(overviewRes.value.data);
+      if (revenueRes.status === 'fulfilled') setRevenueAnalytics(revenueRes.value.data);
+      if (activityRes.status === 'fulfilled') setActivityLog(activityRes.value.data);
 
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -602,16 +598,8 @@ function ManagementSection({ onUpdate }) {
 
   const loadStaff = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/superadmin/staff`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (response.ok) {
-        const staff = await response.json();
-        setStaffList(staff);
-      }
+      const response = await superAdminAPI.getAllStaff();
+      setStaffList(response.data);
     } catch (error) {
       console.error('Error loading staff:', error);
     }
@@ -623,24 +611,13 @@ function ManagementSection({ onUpdate }) {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/superadmin/staff/${staffId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (response.ok) {
-        loadStaff();
-        onUpdate();
-        alert('Staff member deleted successfully');
-      } else {
-        const error = await response.json();
-        alert(error.message || 'Failed to delete staff member');
-      }
+      await superAdminAPI.deleteStaff(staffId);
+      loadStaff();
+      onUpdate();
+      alert('Staff member deleted successfully');
     } catch (error) {
       console.error('Error deleting staff:', error);
-      alert('Failed to delete staff member');
+      alert(error.response?.data?.message || 'Failed to delete staff member');
     }
   };
 
@@ -748,25 +725,12 @@ function AddStaffModal({ onClose, onSuccess }) {
     setLoading(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/superadmin/staff`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (response.ok) {
-        onSuccess();
-        alert('Staff member added successfully');
-      } else {
-        const error = await response.json();
-        alert(error.message || 'Failed to add staff member');
-      }
+      await superAdminAPI.createStaff(formData);
+      onSuccess();
+      alert('Staff member added successfully');
     } catch (error) {
       console.error('Error adding staff:', error);
-      alert('Failed to add staff member');
+      alert(error.response?.data?.message || 'Failed to add staff member');
     } finally {
       setLoading(false);
     }
