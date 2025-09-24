@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import axios from 'axios';
+import { deliveriesAPI } from '../../services/api';
 import DeliveryModal from './DeliveryModal';
 
 function DeliveriesTab() {
@@ -27,11 +27,8 @@ function DeliveriesTab() {
   const fetchReadyCustomers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/deliveries/ready-for-pickup`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setReadyCustomers(response.data.customers);
+      const response = await deliveriesAPI.getReadyForPickup();
+      setReadyCustomers(response.data.customers || []);
     } catch (error) {
       console.error('Error fetching ready customers:', error);
       setError('Failed to load customers with packages ready for pickup');
@@ -42,12 +39,9 @@ function DeliveriesTab() {
 
   const fetchTodayDeliveries = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/deliveries/today`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTodayDeliveries(response.data.deliveries);
-      setTodayTotal(response.data.summary.total_amount);
+      const response = await deliveriesAPI.getTodayDeliveries();
+      setTodayDeliveries(response.data.deliveries || []);
+      setTodayTotal(response.data.summary?.total_amount || 0);
     } catch (error) {
       console.error('Error fetching today\'s deliveries:', error);
       setError('Failed to load today\'s deliveries');
@@ -55,17 +49,19 @@ function DeliveriesTab() {
   };
 
   // Filter customers based on search query
-  const filteredCustomers = readyCustomers.filter(customer => {
-    const searchTerm = searchQuery.toLowerCase();
-    const fullName = `${customer.first_name} ${customer.last_name}`.toLowerCase();
-    const emailMatch = customer.email.toLowerCase().includes(searchTerm);
-    const phoneMatch = customer.phone?.toLowerCase().includes(searchTerm);
-    const branchMatch = customer.branch.toLowerCase().includes(searchTerm);
+  const filteredCustomers = (readyCustomers || []).filter(customer => {
+    if (!customer) return false;
 
-    // Also search within packages
-    const packageMatch = customer.packages.some(pkg =>
-      pkg.tracking_number.toLowerCase().includes(searchTerm) ||
-      pkg.description?.toLowerCase().includes(searchTerm)
+    const searchTerm = searchQuery.toLowerCase();
+    const fullName = `${customer.first_name || ''} ${customer.last_name || ''}`.toLowerCase();
+    const emailMatch = customer.email?.toLowerCase().includes(searchTerm) || false;
+    const phoneMatch = customer.phone?.toLowerCase().includes(searchTerm) || false;
+    const branchMatch = customer.branch?.toLowerCase().includes(searchTerm) || false;
+
+    // Also search within packages (with safety check)
+    const packageMatch = (customer.packages || []).some(pkg =>
+      pkg?.tracking_number?.toLowerCase().includes(searchTerm) ||
+      pkg?.description?.toLowerCase().includes(searchTerm)
     );
 
     return fullName.includes(searchTerm) || emailMatch || phoneMatch || branchMatch || packageMatch;
@@ -80,22 +76,15 @@ function DeliveriesTab() {
   const handleDeliveryComplete = async (deliveryData) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
 
       // Deliver only the selected packages
       const packagesToDeliver = deliveryData.selected_packages;
       const deliveryPromises = packagesToDeliver.map(pkg =>
-        axios.post(
-          `${import.meta.env.VITE_API_URL}/deliveries/deliver/${pkg.package_id}`,
-          {
-            received_by: deliveryData.received_by,
-            notes: deliveryData.notes,
-            payment_method: deliveryData.payment_method
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` }
-          }
-        )
+        deliveriesAPI.deliverPackage(pkg.package_id, {
+          received_by: deliveryData.received_by,
+          notes: deliveryData.notes,
+          payment_method: deliveryData.payment_method
+        })
       );
 
       const responses = await Promise.all(deliveryPromises);

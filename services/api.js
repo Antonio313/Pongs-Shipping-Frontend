@@ -211,4 +211,19 @@ export const superAdminAPI = {
   deleteStaff: (staffId) => api.delete(`/superadmin/staff/${staffId}`),
 }
 
+// Deliveries API calls
+export const deliveriesAPI = {
+  // Get customers with packages ready for pickup
+  getReadyForPickup: () => api.get('/deliveries/ready-for-pickup'),
+
+  // Get today's deliveries
+  getTodayDeliveries: () => api.get('/deliveries/today'),
+
+  // Deliver a package
+  deliverPackage: (packageId, data) => api.post(`/deliveries/deliver/${packageId}`, data),
+
+  // Get delivery history
+  getDeliveryHistory: (params) => api.get('/deliveries/history', { params }),
+}
+
 export default api;
