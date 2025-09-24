@@ -3,9 +3,10 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 // Debug logging for environment variables
-console.log('🔧 Debug - Environment Variables:');
+console.log('🔧 Debug - Environment Variables (v2):');
 console.log('  VITE_API_URL:', import.meta.env.VITE_API_URL);
 console.log('  Final API_BASE_URL:', API_BASE_URL);
+console.log('  NODE_ENV:', import.meta.env.MODE);
 console.log('  All env vars:', import.meta.env);
 
 const api = axios.create({
