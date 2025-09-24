@@ -7,11 +7,11 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     host: '0.0.0.0',
-    port: 3000
+    port: parseInt(process.env.PORT) || 3000
   },
   preview: {
     host: '0.0.0.0',
-    port: 3000
+    port: parseInt(process.env.PORT) || 3000
   },
   build: {
     chunkSizeWarningLimit: 1000,

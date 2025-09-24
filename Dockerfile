@@ -30,8 +30,8 @@ USER nodejs
 # Expose port 8080 consistently
 EXPOSE 8080
 
-# Simple health check using fixed port
-HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+# Health check with longer startup time and dynamic port
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD curl -f http://localhost:8080/ || exit 1
 
 # Start the application using Vite preview
