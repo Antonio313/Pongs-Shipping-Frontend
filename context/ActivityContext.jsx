@@ -18,14 +18,23 @@ export const ActivityProvider = ({ children }) => {
   const activityTimeout = useRef(null);
   const tokenCheckInterval = useRef(null);
 
-  // Activity tracking events
+  // Activity tracking events - comprehensive for mobile and desktop
   const activityEvents = [
     'mousedown',
     'mousemove',
     'keypress',
     'scroll',
     'touchstart',
-    'click'
+    'touchmove',
+    'touchend',
+    'click',
+    'focus',
+    'blur',
+    'pointerdown',
+    'pointermove',
+    'pointerup',
+    'input',
+    'change'
   ];
 
   const updateActivity = () => {
@@ -40,11 +49,24 @@ export const ActivityProvider = ({ children }) => {
       clearTimeout(activityTimeout.current);
     }
 
-    // Mark as inactive after 30 minutes of no activity
+    // Mark as inactive after 45 minutes of no activity (more lenient for mobile users)
     activityTimeout.current = setTimeout(() => {
       setIsActive(false);
-      console.log('User marked as inactive after 30 minutes of no activity');
-    }, 30 * 60 * 1000); // 30 minutes
+      console.log('User marked as inactive after 45 minutes of no activity');
+    }, 45 * 60 * 1000); // 45 minutes
+  };
+
+  // Throttle activity updates to prevent excessive calls on mobile
+  const throttledUpdateActivity = useRef(null);
+
+  const handleActivity = () => {
+    if (throttledUpdateActivity.current) {
+      clearTimeout(throttledUpdateActivity.current);
+    }
+
+    throttledUpdateActivity.current = setTimeout(() => {
+      updateActivity();
+    }, 1000); // Throttle to once per second
   };
 
   const getTokenExpiryTime = (role) => {
@@ -109,10 +131,24 @@ export const ActivityProvider = ({ children }) => {
         localStorage.setItem('loginTime', Date.now().toString());
       }
 
-      // Add activity listeners
+      // Add activity listeners with passive options for better mobile performance
       activityEvents.forEach(event => {
-        window.addEventListener(event, updateActivity, true);
+        const options = {
+          passive: true,
+          capture: true
+        };
+        window.addEventListener(event, handleActivity, options);
       });
+
+      // Handle page visibility changes to maintain activity on mobile
+      const handleVisibilityChange = () => {
+        if (!document.hidden) {
+          // Page became visible again, update activity to prevent logout
+          updateActivity();
+        }
+      };
+
+      document.addEventListener('visibilitychange', handleVisibilityChange);
 
       // Initial activity
       updateActivity();
@@ -123,11 +159,21 @@ export const ActivityProvider = ({ children }) => {
       return () => {
         // Cleanup
         activityEvents.forEach(event => {
-          window.removeEventListener(event, updateActivity, true);
+          const options = {
+            passive: true,
+            capture: true
+          };
+          window.removeEventListener(event, handleActivity, options);
         });
+
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
 
         if (activityTimeout.current) {
           clearTimeout(activityTimeout.current);
+        }
+
+        if (throttledUpdateActivity.current) {
+          clearTimeout(throttledUpdateActivity.current);
         }
 
         if (tokenCheckInterval.current) {

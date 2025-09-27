@@ -138,67 +138,169 @@ function PackagesTab() {
           <p className="text-gray-600">No packages found</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tracking #</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPackages.map(pkg => (
-                <tr 
-                  key={pkg.package_id} 
-                  className="border-b hover:bg-gray-50 cursor-pointer"
-                  onClick={() => handlePackageSelect(pkg)}
-                >
-                  <td className="px-4 py-3 font-mono text-sm">{pkg.tracking_number}</td>
-                  <td className="px-4 py-3">
-                    {pkg.first_name && pkg.last_name ? (
-                      <span>{pkg.first_name} {pkg.last_name}</span>
-                    ) : (
-                      <span className="text-gray-400">N/A</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 max-w-xs truncate">{pkg.description}</td>
-                  <td className="px-4 py-3">{pkg.weight} lb</td>
-                  <td className="px-4 py-3">${pkg.cost}</td>
-                  <td className="px-4 py-3">{getStatusBadge(pkg.status)}</td>
-                  <td className="px-4 py-3">{formatDate(pkg.created_at)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePackageSelect(pkg);
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1 rounded transition-all duration-300"
-                      >
-                        View
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePackageUpdate(pkg);
-                        }}
-                        className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1 rounded transition-all duration-300"
-                      >
-                        Update
-                      </button>
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden lg:block">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tracking #</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPackages.map(pkg => (
+                    <tr
+                      key={pkg.package_id}
+                      className="border-b hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handlePackageSelect(pkg)}
+                    >
+                      <td className="px-4 py-3 font-mono text-sm">{pkg.tracking_number}</td>
+                      <td className="px-4 py-3">
+                        {pkg.first_name && pkg.last_name ? (
+                          <span>{pkg.first_name} {pkg.last_name}</span>
+                        ) : (
+                          <span className="text-gray-400">N/A</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 max-w-xs truncate">{pkg.description}</td>
+                      <td className="px-4 py-3">{pkg.weight} lb</td>
+                      <td className="px-4 py-3">${pkg.cost}</td>
+                      <td className="px-4 py-3">{getStatusBadge(pkg.status)}</td>
+                      <td className="px-4 py-3">{formatDate(pkg.created_at)}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePackageSelect(pkg);
+                            }}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1 rounded transition-all duration-300"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePackageUpdate(pkg);
+                            }}
+                            className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1 rounded transition-all duration-300"
+                          >
+                            Update
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="lg:hidden space-y-4">
+            {filteredPackages.map(pkg => (
+              <div
+                key={pkg.package_id}
+                className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+                onClick={() => handlePackageSelect(pkg)}
+              >
+                {/* Header with tracking number and status */}
+                <div className="flex flex-col xs:flex-row xs:items-start xs:justify-between gap-2 mb-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                      <p className="font-mono text-sm font-semibold text-gray-900 truncate">
+                        {pkg.tracking_number}
+                      </p>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                  <div className="flex-shrink-0">
+                    {getStatusBadge(pkg.status)}
+                  </div>
+                </div>
+
+                {/* Customer Info */}
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <p className="text-sm text-gray-700">
+                    {pkg.first_name && pkg.last_name ? (
+                      `${pkg.first_name} ${pkg.last_name}`
+                    ) : (
+                      <span className="text-gray-400 italic">No customer info</span>
+                    )}
+                  </p>
+                </div>
+
+                {/* Description */}
+                <div className="flex items-start gap-2 mb-3">
+                  <svg className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="text-sm text-gray-600 line-clamp-2">
+                    {pkg.description || 'No description provided'}
+                  </p>
+                </div>
+
+                {/* Package Details Grid */}
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="bg-gray-50 rounded-lg p-2">
+                    <p className="text-xs text-gray-500 font-medium">Weight</p>
+                    <p className="text-sm font-semibold text-gray-900">{pkg.weight} lb</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-2">
+                    <p className="text-xs text-gray-500 font-medium">Cost</p>
+                    <p className="text-sm font-semibold text-green-600">${pkg.cost}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-2">
+                    <p className="text-xs text-gray-500 font-medium">Created</p>
+                    <p className="text-xs font-medium text-gray-700">{formatDate(pkg.created_at)}</p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 pt-2 border-t border-gray-100">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePackageSelect(pkg);
+                    }}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    View
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePackageUpdate(pkg);
+                    }}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Update
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Package Details Modal */}
@@ -279,7 +381,7 @@ function PackageDetailsModal({ package: pkg, onClose, onStatusUpdate, onDelete, 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4" style={{ touchAction: 'pan-y' }}>
       <div className="bg-white rounded-2xl shadow-3xl max-w-4xl w-full h-[90vh] sm:max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 sm:p-6 flex-shrink-0">
@@ -502,7 +604,7 @@ function UpdatePackageModal({ package: pkg, onClose, onUpdate, getStatusBadge })
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4" style={{ touchAction: 'pan-y' }}>
       <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4 p-6 border-b">
           <h2 className="text-xl font-semibold text-gray-800">Update Package Status</h2>
@@ -635,7 +737,7 @@ function DeleteConfirmationModal({ package: pkg, onClose, onConfirm }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4" style={{ touchAction: 'pan-y' }}>
       <div className="bg-white rounded-2xl shadow-3xl max-w-md w-full">
         {/* Header */}
         <div className="bg-red-600 text-white p-6 rounded-t-2xl">

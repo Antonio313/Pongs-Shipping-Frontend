@@ -109,7 +109,7 @@ function Header() {
             <div className="flex items-center space-x-2">
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
-                className="h-8 w-8 text-blue-600 animate-pulse" 
+                className={`${isAuthenticated ? 'h-12 w-12' : 'h-8 w-8'} text-blue-600 animate-pulse transition-all duration-300`} 
                 viewBox="0 0 20 20" 
                 fill="currentColor"
               >
@@ -117,30 +117,63 @@ function Header() {
                 <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z" />
                 <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z" />
               </svg>
-              <span className="text-2xl font-bold text-blue-900">Pong's Shipping Company</span>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-blue-900">Pong's Shipping Company</span>
+                {isAuthenticated && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-500">Logged in as</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      user?.role === 'S' ? 'bg-purple-100 text-purple-700' :
+                      user?.role === 'A' ? 'bg-green-100 text-green-700' :
+                      user?.role === 'C' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+                    }`}>
+                      {user?.role === 'S' ? '👑 Super Admin' :
+                       user?.role === 'A' ? '🔧 Administrator' :
+                       user?.role === 'C' ? '📦 Customer' : '👤 User'}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link 
-              to="/" 
-              className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 hover:scale-105"
-            >
-              Home
-            </Link>
-            <a 
-              href="#services" 
-              className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 hover:scale-105"
-            >
-              Services
-            </a>
-            <a 
-              href="#contact" 
-              className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 hover:scale-105"
-            >
-              Contact Us
-            </a>
+            {/* Public navigation - only show when not authenticated */}
+            {!isAuthenticated && (
+              <>
+                <Link
+                  to="/"
+                  className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 hover:scale-105"
+                >
+                  Home
+                </Link>
+                <a
+                  href="#services"
+                  className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 hover:scale-105"
+                >
+                  Services
+                </a>
+                <a
+                  href="#contact"
+                  className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 hover:scale-105"
+                >
+                  Contact Us
+                </a>
+              </>
+            )}
+
+            {/* Authenticated user navigation */}
+            {isAuthenticated && (
+              <>
+                <Link
+                  to={user?.role === 'A' ? '/adminDashboard' : user?.role === 'S' ? '/superAdminDashboard' : '/dashboard'}
+                  className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 hover:scale-105"
+                >
+                  Dashboard
+                </Link>
+              </>
+            )}
             
             
             {loading ? (
@@ -464,6 +497,17 @@ function Header() {
                       Manage Packages
                     </Link>
                     <Link
+                      to="/adminDashboard?tab=customers"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200"
+                      onClick={closeDropdown}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      Manage Customers
+                    </Link>
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <Link
                       to="/admin/profile"
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200"
                       onClick={closeDropdown}
@@ -597,29 +641,96 @@ function Header() {
         </div>
 
         {/* Mobile Navigation */}
-        <div className={`md:hidden transition-all duration-500 ease-in-out ${isMenuOpen ? 'max-h-[80vh] opacity-100 mt-4 pb-4' : 'max-h-0 opacity-0'}`}>
+        <div className={`md:hidden transition-all duration-500 ease-in-out ${isMenuOpen ? 'max-h-[80vh] opacity-100 mt-4 pb-4 pointer-events-auto' : 'max-h-0 opacity-0 pointer-events-none overflow-hidden'}`}>
           <div className="flex flex-col space-y-3 pt-4 overflow-y-auto max-h-[75vh]">
-            <Link 
-              to="/" 
-              className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-blue-50"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <a 
-              href="#services" 
-              className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-blue-50"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Services
-            </a>
-            <a 
-              href="#contact" 
-              className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-blue-50"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Contact Us
-            </a>
+
+            {/* Public navigation - only show when not authenticated */}
+            {!isAuthenticated && (
+              <>
+                <Link
+                  to="/"
+                  className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-blue-50"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Home
+                </Link>
+                <a
+                  href="#services"
+                  className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-blue-50"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Services
+                </a>
+                <a
+                  href="#contact"
+                  className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-blue-50"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Contact Us
+                </a>
+              </>
+            )}
+
+            {/* Authenticated user navigation */}
+            {isAuthenticated && (
+              <>
+                {/* Role-based Dashboard Links */}
+                {user?.role === 'C' && (
+                  <Link
+                    to="/customerDashboard"
+                    className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-blue-50 flex items-center space-x-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h2a2 2 0 012 2v2H8V5z" />
+                    </svg>
+                    <span>Customer Dashboard</span>
+                  </Link>
+                )}
+
+                {user?.role === 'A' && (
+                  <Link
+                    to="/adminDashboard"
+                    className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-blue-50 flex items-center space-x-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h2a2 2 0 012 2v2H8V5z" />
+                    </svg>
+                    <span>Admin Dashboard</span>
+                  </Link>
+                )}
+
+                {user?.role === 'A' && (
+                  <Link
+                    to="/adminDashboard?tab=customers"
+                    className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-blue-50 flex items-center space-x-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span>Manage Customers</span>
+                  </Link>
+                )}
+
+
+                {user?.role === 'S' && (
+                  <Link
+                    to="/superAdminDashboard"
+                    className="text-gray-700 hover:text-purple-600 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-purple-50 flex items-center space-x-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span>Super Admin Dashboard</span>
+                  </Link>
+                )}
+              </>
+            )}
             
             
             {!isAuthenticated ? (
@@ -807,6 +918,16 @@ function Header() {
                         </svg>
                         Manage Packages
                       </Link>
+                      <Link
+                        to="/adminDashboard?tab=customers"
+                        className="flex items-center text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 py-3 px-4 rounded-lg hover:bg-blue-50"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        Manage Customers
+                      </Link>
                     </>
                   )}
 
@@ -874,6 +995,36 @@ function Header() {
                   )}
 
                 </div>
+
+                {/* Admin Panel Section - My Profile and Settings */}
+                {(user?.role === 'A' || user?.role === 'S') && (
+                  <div className="border-t border-gray-200 pt-3 mt-3 px-3">
+                    <div className="px-2 py-1 text-xs text-gray-500 font-semibold mb-2">
+                      Admin Panel
+                    </div>
+                    <Link
+                      to="/admin/profile"
+                      className="flex items-center text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-blue-50 mb-2"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      My Profile
+                    </Link>
+                    <Link
+                      to="/admin/settings"
+                      className="flex items-center text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 py-2 px-4 rounded-lg hover:bg-blue-50"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Settings
+                    </Link>
+                  </div>
+                )}
 
                 {/* Fixed Logout Button - Always Visible */}
                 <div className="border-t border-gray-200 pt-3 mt-3 px-3 bg-white">

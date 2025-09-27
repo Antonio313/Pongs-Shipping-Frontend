@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { deliveriesAPI } from '../../services/api';
 import DeliveryModal from './DeliveryModal';
@@ -111,9 +111,9 @@ function DeliveriesTab() {
     }
   };
 
-  const toggleCustomerExpand = (customerId) => {
-    setExpandedCustomer(expandedCustomer === customerId ? null : customerId);
-  };
+  const toggleCustomerExpand = useCallback((customerId) => {
+    setExpandedCustomer(prev => prev === customerId ? null : customerId);
+  }, []);
 
   const formatCurrency = (amount) => {
     return `JM$${parseFloat(amount || 0).toLocaleString('en-US', {
@@ -317,7 +317,8 @@ function DeliveriesTab() {
 
                           <button
                             onClick={() => toggleCustomerExpand(customer.user_id)}
-                            className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 flex-shrink-0"
+                            className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 flex-shrink-0 touch-manipulation"
+                            style={{ touchAction: 'manipulation' }}
                           >
                             <svg
                               className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${expandedCustomer === customer.user_id ? 'rotate-180' : ''}`}

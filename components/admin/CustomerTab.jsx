@@ -226,73 +226,174 @@ function CustomerTab({
                 <p className="text-gray-600">No pre-alerts found for this customer</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-4 py-2 text-left">Description</th>
-                      <th className="px-4 py-2 text-left">Price</th>
-                      <th className="px-4 py-2 text-left">Status</th>
-                      <th className="px-4 py-2 text-left">Receipt</th>
-                      <th className="px-4 py-2 text-left">Created</th>
-                      <th className="px-4 py-2 text-left">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {customerPreAlerts.map(alert => (
-                      <tr 
-                        key={alert.prealert_id} 
-                        className={`border-b cursor-pointer ${selectedPreAlert?.prealert_id === alert.prealert_id ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
-                        onClick={() => handleInternalPreAlertSelect(alert)}
-                      >
-                        <td className="px-4 py-3">{alert.description}</td>
-                        <td className="px-4 py-3">${alert.price}</td>
-                        <td className="px-4 py-3">{getStatusBadge(alert.status)}</td>
-                        <td className="px-4 py-3">
-                          {alert.invoice_url ? (
-                            <span className="text-green-600 text-sm flex items-center">
-                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              Yes
-                            </span>
-                          ) : (
-                            <span className="text-gray-400 text-sm flex items-center">
-                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                              No
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">{formatDate(alert.created_at)}</td>
-                        <td className="px-4 py-3">
-                          {alert.status === 'U' && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleInternalConfirmPreAlert(alert);
-                              }}
-                              className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1 rounded transition-all duration-300 mr-2"
-                            >
-                              Confirm
-                            </button>
-                          )}
+              <>
+                {/* Desktop Table View */}
+                <div className="hidden lg:block">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="px-4 py-2 text-left">Description</th>
+                          <th className="px-4 py-2 text-left">Price</th>
+                          <th className="px-4 py-2 text-left">Status</th>
+                          <th className="px-4 py-2 text-left">Receipt</th>
+                          <th className="px-4 py-2 text-left">Created</th>
+                          <th className="px-4 py-2 text-left">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {customerPreAlerts.map(alert => (
+                          <tr
+                            key={alert.prealert_id}
+                            className={`border-b cursor-pointer ${selectedPreAlert?.prealert_id === alert.prealert_id ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+                            onClick={() => handleInternalPreAlertSelect(alert)}
+                          >
+                            <td className="px-4 py-3">{alert.description}</td>
+                            <td className="px-4 py-3">${alert.price}</td>
+                            <td className="px-4 py-3">{getStatusBadge(alert.status)}</td>
+                            <td className="px-4 py-3">
+                              {alert.invoice_url ? (
+                                <span className="text-green-600 text-sm flex items-center">
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  Yes
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 text-sm flex items-center">
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                  No
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">{formatDate(alert.created_at)}</td>
+                            <td className="px-4 py-3">
+                              {alert.status === 'U' && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleInternalConfirmPreAlert(alert);
+                                  }}
+                                  className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1 rounded transition-all duration-300 mr-2"
+                                >
+                                  Confirm
+                                </button>
+                              )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleInternalPreAlertSelect(alert);
+                                }}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1 rounded transition-all duration-300"
+                              >
+                                View
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="lg:hidden space-y-4">
+                  {customerPreAlerts.map(alert => (
+                    <div
+                      key={alert.prealert_id}
+                      className={`bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${
+                        selectedPreAlert?.prealert_id === alert.prealert_id ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+                      }`}
+                      onClick={() => handleInternalPreAlertSelect(alert)}
+                    >
+                      {/* Header with status */}
+                      <div className="flex flex-col xs:flex-row xs:items-start xs:justify-between gap-2 mb-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <svg className="w-4 h-4 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <h4 className="text-sm font-semibold text-gray-900">Pre-Alert #{alert.prealert_id}</h4>
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0">
+                          {getStatusBadge(alert.status)}
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <div className="mb-3">
+                        <p className="text-sm text-gray-700 line-clamp-2">
+                          {alert.description}
+                        </p>
+                      </div>
+
+                      {/* Details Grid */}
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="bg-gray-50 rounded-lg p-2">
+                          <p className="text-xs text-gray-500 font-medium">Price</p>
+                          <p className="text-sm font-semibold text-green-600">${alert.price}</p>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-2">
+                          <p className="text-xs text-gray-500 font-medium">Created</p>
+                          <p className="text-xs font-medium text-gray-700">{formatDate(alert.created_at)}</p>
+                        </div>
+                      </div>
+
+                      {/* Receipt Status */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="text-sm text-gray-600">Receipt:</span>
+                        {alert.invoice_url ? (
+                          <span className="text-green-600 text-sm flex items-center">
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Available
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-sm">Not uploaded</span>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 pt-2 border-t border-gray-100">
+                        {alert.status === 'U' && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleInternalPreAlertSelect(alert);
+                              handleInternalConfirmPreAlert(alert);
                             }}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1 rounded transition-all duration-300"
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
                           >
-                            View
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Confirm
                           </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleInternalPreAlertSelect(alert);
+                          }}
+                          className={`${alert.status === 'U' ? 'flex-1' : 'w-full'} bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2`}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          View
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         ) : (
@@ -337,7 +438,7 @@ function CustomerTab({
 // PreAlert Details Modal Component
 function PreAlertDetailsModal({ preAlert, onClose, onDownloadInvoice, downloadingInvoice, getStatusBadge, formatDate, formatDateTime }) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4" style={{ touchAction: 'pan-y' }}>
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4 p-6 border-b">
           <h2 className="text-xl font-semibold text-gray-800">Pre-Alert Details</h2>
@@ -483,7 +584,7 @@ function PreAlertDetailsModal({ preAlert, onClose, onDownloadInvoice, downloadin
 // Add Package Notification Modal Component
 function AddPackageModal({ customer, formData, onFormChange, onSend, onClose, loading, status }) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4" style={{ touchAction: 'pan-y' }}>
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4 p-6 border-b">
           <h2 className="text-xl font-semibold text-gray-800">

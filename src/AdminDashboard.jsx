@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useAdmin } from '../context/AdminContext';
 import { useLocation } from 'react-router-dom';
@@ -30,6 +30,7 @@ function AdminDashboard() {
   const [showPackageModal, setShowPackageModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [isChangingTab, setIsChangingTab] = useState(false);
 
   // Load customers on component mount and when user changes
   useEffect(() => {
@@ -67,20 +68,38 @@ function AdminDashboard() {
     }
   }, [successMessage]);
 
-  const handleCustomerSelect = async (customer) => {
+  // Optimized tab switching with debouncing to prevent freezing
+  const handleTabChange = useCallback((newTab) => {
+    if (isChangingTab || newTab === activeTab) return;
+
+    setIsChangingTab(true);
+
+    // Use setTimeout to prevent rapid clicks from causing issues
+    setTimeout(() => {
+      setActiveTab(newTab);
+      setIsChangingTab(false);
+    }, 50);
+  }, [activeTab, isChangingTab]);
+
+  const handleCustomerSelect = useCallback(async (customer) => {
+    if (!customer) return;
     setSelectedCustomer(customer);
     setSelectedPreAlert(null);
-    await fetchCustomerDetails(customer.user_id);
-  };
+    try {
+      await fetchCustomerDetails(customer.user_id);
+    } catch (error) {
+      console.error('Error fetching customer details:', error);
+    }
+  }, [fetchCustomerDetails]);
 
-  const handlePreAlertSelect = (preAlert) => {
+  const handlePreAlertSelect = useCallback((preAlert) => {
     setSelectedPreAlert(preAlert);
-  };
+  }, []);
 
-  const handleConfirmPreAlert = (preAlert) => {
+  const handleConfirmPreAlert = useCallback((preAlert) => {
     setSelectedPreAlert(preAlert);
     setShowPackageModal(true);
-  };
+  }, []);
 
   const handleCreatePackage = (result) => {
     setShowPackageModal(false);
@@ -139,6 +158,42 @@ function AdminDashboard() {
     });
   };
 
+  // Memoize the tab content to prevent unnecessary re-renders
+  const tabContent = useMemo(() => {
+    switch (activeTab) {
+      case 'customers':
+        return (
+          <CustomerTab
+            customers={customers}
+            selectedCustomer={selectedCustomer}
+            customerPreAlerts={customerPreAlerts}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            handleCustomerSelect={handleCustomerSelect}
+            handlePreAlertSelect={handlePreAlertSelect}
+            handleConfirmPreAlert={handleConfirmPreAlert}
+            getStatusBadge={getStatusBadge}
+            formatDate={formatDate}
+          />
+        );
+      case 'packages':
+        return <PackagesTab />;
+      case 'deliveries':
+        return <DeliveriesTab />;
+      default:
+        return null;
+    }
+  }, [
+    activeTab,
+    customers,
+    selectedCustomer,
+    customerPreAlerts,
+    searchQuery,
+    handleCustomerSelect,
+    handlePreAlertSelect,
+    handleConfirmPreAlert
+  ]);
+
   if (loading && customers.length === 0) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -152,7 +207,7 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50" style={{ touchAction: 'pan-y pinch-zoom' }}>
       <Header />
       
       <main className="flex-grow">
@@ -230,24 +285,60 @@ function AdminDashboard() {
 
           {/* Mobile-Responsive Navigation Tabs */}
           <div className="bg-white rounded-xl shadow-lg mb-6 sm:mb-8">
-            {/* Mobile Tab Selector */}
+            {/* Mobile Tab Navigation - Button Style for Better Performance */}
             <div className="sm:hidden border-b border-gray-200">
-              <select
-                value={activeTab}
-                onChange={(e) => setActiveTab(e.target.value)}
-                className="w-full px-4 py-4 bg-transparent text-gray-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="customers">👥 Customers</option>
-                <option value="packages">📦 Packages</option>
-                <option value="deliveries">🚚 Deliveries</option>
-              </select>
+              <div className="flex">
+                <button
+                  onClick={() => handleTabChange('customers')}
+                  disabled={isChangingTab}
+                  className={`flex-1 px-3 py-3 font-semibold text-sm transition-colors duration-200 disabled:opacity-50 ${
+                    activeTab === 'customers'
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                      : 'text-gray-600 hover:text-blue-600'
+                  }`}
+                >
+                  <span className="flex flex-col items-center space-y-1">
+                    <span>👥</span>
+                    <span className="text-xs">Customers</span>
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleTabChange('packages')}
+                  disabled={isChangingTab}
+                  className={`flex-1 px-3 py-3 font-semibold text-sm transition-colors duration-200 disabled:opacity-50 ${
+                    activeTab === 'packages'
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                      : 'text-gray-600 hover:text-blue-600'
+                  }`}
+                >
+                  <span className="flex flex-col items-center space-y-1">
+                    <span>📦</span>
+                    <span className="text-xs">Packages</span>
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleTabChange('deliveries')}
+                  disabled={isChangingTab}
+                  className={`flex-1 px-3 py-3 font-semibold text-sm transition-colors duration-200 disabled:opacity-50 ${
+                    activeTab === 'deliveries'
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                      : 'text-gray-600 hover:text-blue-600'
+                  }`}
+                >
+                  <span className="flex flex-col items-center space-y-1">
+                    <span>🚚</span>
+                    <span className="text-xs">Deliveries</span>
+                  </span>
+                </button>
+              </div>
             </div>
 
             {/* Desktop Tab Navigation */}
             <div className="hidden sm:flex border-b border-gray-200">
               <button
-                onClick={() => setActiveTab('customers')}
-                className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-4 font-semibold transition-all duration-300 text-sm sm:text-base ${
+                onClick={() => handleTabChange('customers')}
+                disabled={isChangingTab}
+                className={`px-6 py-4 font-semibold transition-colors duration-200 disabled:opacity-50 ${
                   activeTab === 'customers'
                     ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
                     : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
@@ -259,8 +350,9 @@ function AdminDashboard() {
                 </span>
               </button>
               <button
-                onClick={() => setActiveTab('packages')}
-                className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-4 font-semibold transition-all duration-300 text-sm sm:text-base ${
+                onClick={() => handleTabChange('packages')}
+                disabled={isChangingTab}
+                className={`px-6 py-4 font-semibold transition-colors duration-200 disabled:opacity-50 ${
                   activeTab === 'packages'
                     ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
                     : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
@@ -272,8 +364,9 @@ function AdminDashboard() {
                 </span>
               </button>
               <button
-                onClick={() => setActiveTab('deliveries')}
-                className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-4 font-semibold transition-all duration-300 text-sm sm:text-base ${
+                onClick={() => handleTabChange('deliveries')}
+                disabled={isChangingTab}
+                className={`px-6 py-4 font-semibold transition-colors duration-200 disabled:opacity-50 ${
                   activeTab === 'deliveries'
                     ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
                     : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
@@ -287,28 +380,7 @@ function AdminDashboard() {
             </div>
 
             <div className="p-4 sm:p-6">
-              {activeTab === 'customers' && (
-                <CustomerTab
-                  customers={customers}
-                  selectedCustomer={selectedCustomer}
-                  customerPreAlerts={customerPreAlerts}
-                  searchQuery={searchQuery}
-                  setSearchQuery={setSearchQuery}
-                  handleCustomerSelect={handleCustomerSelect}
-                  handlePreAlertSelect={handlePreAlertSelect}
-                  handleConfirmPreAlert={handleConfirmPreAlert}
-                  getStatusBadge={getStatusBadge}
-                  formatDate={formatDate}
-                />
-              )}
-
-              {activeTab === 'packages' && (
-                <PackagesTab />
-              )}
-
-              {activeTab === 'deliveries' && (
-                <DeliveriesTab />
-              )}
+              {tabContent}
             </div>
           </div>
         </div>
