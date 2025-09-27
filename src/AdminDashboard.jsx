@@ -156,16 +156,16 @@ function AdminDashboard() {
       <Header />
       
       <main className="flex-grow">
-        {/* Welcome Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-8">
-          <div className="container mx-auto px-6">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-                <p className="text-blue-100">Manage customers, pre-alerts, and packages</p>
+        {/* Mobile-Responsive Welcome Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-6 sm:py-8">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="text-center md:text-left">
+                <h1 className="text-2xl sm:text-3xl font-bold mb-2">Admin Dashboard</h1>
+                <p className="text-blue-100 text-sm sm:text-base">Manage customers, pre-alerts, and packages</p>
               </div>
-              <div className="mt-4 md:mt-0">
-                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4">
+              <div className="w-full md:w-auto">
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 sm:p-4 text-center md:text-left">
                   <p className="text-sm">Welcome, {user?.first_name} {user?.last_name}</p>
                   <p className="text-sm">Role: Administrator</p>
                 </div>
@@ -174,10 +174,10 @@ function AdminDashboard() {
           </div>
         </div>
 
-        <div className="container mx-auto px-6 py-8">
-          {/* Admin Tools Section */}
-          <div className="bg-white rounded-xl shadow-lg mb-8">
-            <div className="p-6">
+        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          {/* Mobile-Responsive Admin Tools Section */}
+          <div className="bg-white rounded-xl shadow-lg mb-6 sm:mb-8">
+            <div className="p-4 sm:p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Admin Tools</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <a
@@ -185,14 +185,14 @@ function AdminDashboard() {
                   className="bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-4 transition-all duration-300 group"
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="bg-blue-600 text-white p-2 rounded-lg group-hover:bg-blue-700 transition-colors">
+                    <div className="bg-blue-600 text-white p-2 rounded-lg group-hover:bg-blue-700 transition-colors flex-shrink-0">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 0V4a2 2 0 00-2-2H9a2 2 0 00-2 2v3m1 0h4" />
                       </svg>
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-800">Transfer Management</h4>
-                      <p className="text-sm text-gray-600">Manage package transfers between locations</p>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-semibold text-gray-800 text-sm sm:text-base">Transfer Management</h4>
+                      <p className="text-xs sm:text-sm text-gray-600">Manage package transfers between locations</p>
                     </div>
                   </div>
                 </a>
@@ -228,42 +228,65 @@ function AdminDashboard() {
             </div>
           )}
 
-          {/* Navigation Tabs */}
-          <div className="bg-white rounded-xl shadow-lg mb-8">
-            <div className="flex border-b">
+          {/* Mobile-Responsive Navigation Tabs */}
+          <div className="bg-white rounded-xl shadow-lg mb-6 sm:mb-8">
+            {/* Mobile Tab Selector */}
+            <div className="sm:hidden border-b border-gray-200">
+              <select
+                value={activeTab}
+                onChange={(e) => setActiveTab(e.target.value)}
+                className="w-full px-4 py-4 bg-transparent text-gray-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="customers">👥 Customers</option>
+                <option value="packages">📦 Packages</option>
+                <option value="deliveries">🚚 Deliveries</option>
+              </select>
+            </div>
+
+            {/* Desktop Tab Navigation */}
+            <div className="hidden sm:flex border-b border-gray-200">
               <button
                 onClick={() => setActiveTab('customers')}
-                className={`px-6 py-4 font-semibold transition-all duration-300 ${
+                className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-4 font-semibold transition-all duration-300 text-sm sm:text-base ${
                   activeTab === 'customers'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-blue-600'
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
                 }`}
               >
-                Customers
+                <span className="flex items-center space-x-2">
+                  <span>👥</span>
+                  <span>Customers</span>
+                </span>
               </button>
               <button
                 onClick={() => setActiveTab('packages')}
-                className={`px-6 py-4 font-semibold transition-all duration-300 ${
+                className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-4 font-semibold transition-all duration-300 text-sm sm:text-base ${
                   activeTab === 'packages'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-blue-600'
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
                 }`}
               >
-                Packages
+                <span className="flex items-center space-x-2">
+                  <span>📦</span>
+                  <span>Packages</span>
+                </span>
               </button>
               <button
                 onClick={() => setActiveTab('deliveries')}
-                className={`px-6 py-4 font-semibold transition-all duration-300 ${
+                className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-4 font-semibold transition-all duration-300 text-sm sm:text-base ${
                   activeTab === 'deliveries'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-blue-600'
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
                 }`}
               >
-                Deliveries
+                <span className="flex items-center space-x-2">
+                  <span>🚚</span>
+                  <span>Deliveries</span>
+                </span>
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {activeTab === 'customers' && (
                 <CustomerTab
                   customers={customers}

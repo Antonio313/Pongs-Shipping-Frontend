@@ -125,18 +125,18 @@ function CustomerTab({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Customer List */}
+    <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-8">
+      {/* Mobile-Responsive Customer List */}
       <div className="lg:col-span-1">
-        <div className="flex items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-800 mr-4">Customers</h3>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">Customers</h3>
           <div className="flex-1">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search customers..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
             />
           </div>
         </div>

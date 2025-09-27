@@ -181,36 +181,44 @@ function DeliveriesTab() {
         </div>
       )}
 
-      {/* View Toggle */}
+      {/* Mobile-Responsive View Toggle */}
       <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
         <button
           onClick={() => setActiveView('ready')}
-          className={`flex-1 px-4 py-2 rounded-md font-medium transition-all duration-200 ${
+          className={`flex-1 px-2 sm:px-4 py-2 rounded-md font-medium transition-all duration-200 ${
             activeView === 'ready'
               ? 'bg-white text-blue-600 shadow-sm'
               : 'text-gray-600 hover:text-blue-600'
           }`}
         >
-          <div className="flex items-center justify-center space-x-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center justify-center space-x-1 sm:space-x-2">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
-            <span>Ready for Pickup ({readyCustomers.length} customers)</span>
+            <span className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Ready for Pickup </span>
+              <span className="sm:hidden">Ready </span>
+              ({readyCustomers.length})
+            </span>
           </div>
         </button>
         <button
           onClick={() => setActiveView('today')}
-          className={`flex-1 px-4 py-2 rounded-md font-medium transition-all duration-200 ${
+          className={`flex-1 px-2 sm:px-4 py-2 rounded-md font-medium transition-all duration-200 ${
             activeView === 'today'
               ? 'bg-white text-blue-600 shadow-sm'
               : 'text-gray-600 hover:text-blue-600'
           }`}
         >
-          <div className="flex items-center justify-center space-x-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center justify-center space-x-1 sm:space-x-2">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-6-7.15" />
             </svg>
-            <span>Today's Deliveries ({todayDeliveries.length})</span>
+            <span className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Today's Deliveries </span>
+              <span className="sm:hidden">Today </span>
+              ({todayDeliveries.length})
+            </span>
           </div>
         </button>
       </div>
@@ -253,12 +261,15 @@ function DeliveriesTab() {
       {/* Ready for Pickup View */}
       {activeView === 'ready' && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-bold text-gray-800">Customers with Packages Ready for Pickup</h3>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-800">
+              <span className="hidden sm:inline">Customers with Packages Ready for Pickup</span>
+              <span className="sm:hidden">Ready for Pickup</span>
+            </h3>
             <button
               onClick={fetchReadyCustomers}
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base"
             >
               <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -283,75 +294,80 @@ function DeliveriesTab() {
             <div className="space-y-4">
               {filteredCustomers.map((customer) => (
                 <div key={customer.user_id} className="bg-white rounded-xl border border-gray-200 hover:border-blue-300 transition-all duration-300 hover:shadow-lg">
-                  {/* Customer Header */}
-                  <div className="p-6 border-b border-gray-100">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h4 className="font-bold text-gray-900 text-xl">{customer.first_name} {customer.last_name}</h4>
-                          <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                            {customer.package_count} package{customer.package_count !== 1 ? 's' : ''}
+                  {/* Mobile-Responsive Customer Header */}
+                  <div className="p-4 sm:p-6 border-b border-gray-100">
+                    <div className="space-y-4">
+                      {/* Customer Name and Package Count */}
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                        <div className="flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
+                            <h4 className="font-bold text-gray-900 text-lg sm:text-xl">{customer.first_name} {customer.last_name}</h4>
+                            <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium w-fit">
+                              {customer.package_count} package{customer.package_count !== 1 ? 's' : ''}
+                            </div>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                          <div className="flex items-center">
-                            <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                            <span>{customer.email}</span>
+                        {/* Total Amount and Expand Button */}
+                        <div className="flex items-center justify-between sm:justify-end space-x-3">
+                          <div className="text-left sm:text-right">
+                            <p className="text-sm text-gray-600">Total Amount</p>
+                            <p className="text-xl sm:text-2xl font-bold text-green-600">{formatCurrency(customer.total_amount)}</p>
                           </div>
-                          {customer.phone && (
-                            <div className="flex items-center">
-                              <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                              </svg>
-                              <span>{customer.phone}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center">
-                            <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+
+                          <button
+                            onClick={() => toggleCustomerExpand(customer.user_id)}
+                            className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 flex-shrink-0"
+                          >
+                            <svg
+                              className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${expandedCustomer === customer.user_id ? 'rotate-180' : ''}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
-                            <span>{customer.branch}</span>
-                          </div>
+                          </button>
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-3">
-                        <div className="text-right">
-                          <p className="text-sm text-gray-600">Total Amount</p>
-                          <p className="text-2xl font-bold text-green-600">{formatCurrency(customer.total_amount)}</p>
-                        </div>
-
-                        <button
-                          onClick={() => toggleCustomerExpand(customer.user_id)}
-                          className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-                        >
-                          <svg
-                            className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${expandedCustomer === customer.user_id ? 'rotate-180' : ''}`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      {/* Customer Contact Info */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-gray-600">
+                        <div className="flex items-center">
+                          <svg className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                           </svg>
-                        </button>
+                          <span className="truncate">{customer.email}</span>
+                        </div>
+                        {customer.phone && (
+                          <div className="flex items-center">
+                            <svg className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            <span>{customer.phone}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center">
+                          <svg className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          </svg>
+                          <span>{customer.branch}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Expandable Package Details */}
                   {expandedCustomer === customer.user_id && (
-                    <div className="p-6 bg-gray-50">
+                    <div className="p-4 sm:p-6 bg-gray-50">
                       <h5 className="font-semibold text-gray-900 mb-4">Package Details:</h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                         {customer.packages.map((pkg) => (
                           <div key={pkg.package_id} className="bg-white rounded-lg border border-gray-200 p-4">
-                            <div className="space-y-2">
-                              <div className="flex justify-between">
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-start">
                                 <span className="text-xs text-gray-600">Tracking #:</span>
-                                <span className="text-xs font-mono font-medium text-blue-600">{pkg.tracking_number}</span>
+                                <span className="text-xs font-mono font-medium text-blue-600 text-right">{pkg.tracking_number}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-xs text-gray-600">Weight:</span>
@@ -362,9 +378,9 @@ function DeliveriesTab() {
                                 <span className="text-sm font-bold text-green-600">{formatCurrency(pkg.finalcost)}</span>
                               </div>
                               {pkg.description && (
-                                <div className="mt-2">
-                                  <p className="text-xs text-gray-600">Description:</p>
-                                  <p className="text-xs text-gray-800 bg-gray-50 p-2 rounded border mt-1">{pkg.description}</p>
+                                <div className="mt-3">
+                                  <p className="text-xs text-gray-600 mb-1">Description:</p>
+                                  <p className="text-xs text-gray-800 bg-gray-50 p-2 rounded border">{pkg.description}</p>
                                 </div>
                               )}
                             </div>
@@ -374,18 +390,21 @@ function DeliveriesTab() {
                     </div>
                   )}
 
-                  {/* Deliver All Button */}
-                  <div className="p-6 bg-gray-50 border-t border-gray-100">
+                  {/* Mobile-Responsive Deliver Button */}
+                  <div className="p-4 sm:p-6 bg-gray-50 border-t border-gray-100">
                     <button
                       onClick={() => handleDeliverPackages(customer, customer.packages)}
                       disabled={loading}
-                      className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                     >
                       <div className="flex items-center justify-center space-x-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-6-7.15" />
                         </svg>
-                        <span>Deliver All Packages ({customer.package_count}) - {formatCurrency(customer.total_amount)}</span>
+                        <span className="text-center">
+                          <span className="hidden sm:inline">Deliver All Packages ({customer.package_count}) - {formatCurrency(customer.total_amount)}</span>
+                          <span className="sm:hidden">Deliver All ({customer.package_count}) - {formatCurrency(customer.total_amount)}</span>
+                        </span>
                       </div>
                     </button>
                   </div>
@@ -399,22 +418,41 @@ function DeliveriesTab() {
       {/* Today's Deliveries View */}
       {activeView === 'today' && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-bold text-gray-800">Today's Deliveries</h3>
-            <div className="flex items-center space-x-4">
-              <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg font-semibold">
-                Total: {formatCurrency(todayTotal)}
-              </div>
+          {/* Mobile-First Header Layout */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800">Today's Deliveries</h3>
               <button
                 onClick={fetchTodayDeliveries}
                 disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base sm:w-auto"
               >
                 <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 <span>Refresh</span>
               </button>
+            </div>
+
+            {/* Total Amount - Prominent Display */}
+            <div className="bg-gradient-to-r from-green-100 to-green-50 border border-green-200 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-green-600 text-white p-2 rounded-lg">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm text-green-700 font-medium">Today's Total Revenue</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-green-800">{formatCurrency(todayTotal)}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-green-700">Deliveries</p>
+                  <p className="text-xl font-bold text-green-800">{todayDeliveries.length}</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -427,49 +465,94 @@ function DeliveriesTab() {
               <p className="text-gray-500">No packages have been delivered yet today</p>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tracking #</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Received By</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivered At</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admin</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {todayDeliveries.map((delivery) => (
-                      <tr key={delivery.delivery_id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="font-medium text-gray-900">{delivery.first_name} {delivery.last_name}</div>
-                            <div className="text-sm text-gray-500">{delivery.email}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="font-mono text-sm font-medium text-blue-600">{delivery.tracking_number}</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="font-bold text-green-600">{formatCurrency(delivery.finalcost)}</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-gray-900">{delivery.received_by}</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-900">{formatDateTime(delivery.delivered_at)}</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-900">
-                            {delivery.admin_first_name} {delivery.admin_last_name}
-                          </span>
-                        </td>
+            <div className="space-y-4">
+              {/* Desktop Table View */}
+              <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tracking #</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Received By</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivered At</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admin</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {todayDeliveries.map((delivery) => (
+                        <tr key={delivery.delivery_id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="font-medium text-gray-900">{delivery.first_name} {delivery.last_name}</div>
+                              <div className="text-sm text-gray-500">{delivery.email}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="font-mono text-sm font-medium text-blue-600">{delivery.tracking_number}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="font-bold text-green-600">{formatCurrency(delivery.finalcost)}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm font-medium text-gray-900">{delivery.received_by}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm text-gray-900">{formatDateTime(delivery.delivered_at)}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm text-gray-900">
+                              {delivery.admin_first_name} {delivery.admin_last_name}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-4">
+                {todayDeliveries.map((delivery) => (
+                  <div key={delivery.delivery_id} className="bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 transition-all duration-300">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900 text-lg">{delivery.first_name} {delivery.last_name}</h4>
+                        <p className="text-sm text-gray-600">{delivery.email}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-green-600">{formatCurrency(delivery.finalcost)}</p>
+                        <p className="text-xs text-gray-500">Amount</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-sm text-gray-600">Tracking #:</span>
+                        <span className="font-mono text-sm font-medium text-blue-600">{delivery.tracking_number}</span>
+                      </div>
+
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-sm text-gray-600">Received By:</span>
+                        <span className="text-sm font-medium text-gray-900">{delivery.received_by}</span>
+                      </div>
+
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-sm text-gray-600">Delivered At:</span>
+                        <span className="text-sm text-gray-900">{formatDateTime(delivery.delivered_at)}</span>
+                      </div>
+
+                      <div className="flex justify-between py-2">
+                        <span className="text-sm text-gray-600">Admin:</span>
+                        <span className="text-sm text-gray-900">
+                          {delivery.admin_first_name} {delivery.admin_last_name}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
