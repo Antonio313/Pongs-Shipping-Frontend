@@ -16,7 +16,9 @@ export default defineConfig({
     allowedHosts: [
       'localhost',
       '.railway.app',
-      'pongs-shipping-frontend-production.up.railway.app'
+      'pongs-shipping-frontend-production.up.railway.app',
+      'pongsshipping.com',
+      'www.pongsshipping.com'
     ]
   },
   build: {

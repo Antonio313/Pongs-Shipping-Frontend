@@ -2,9 +2,9 @@ import axios from 'axios';
 
 // Determine API URL based on environment
 const getApiBaseUrl = () => {
-  // In production (Railway), use the Railway backend URL
+  // In production, use environment variable if set, otherwise use Railway backend URL
   if (import.meta.env.PROD || import.meta.env.MODE === 'production') {
-    return 'https://pongs-shipping-backend-production.up.railway.app/api';
+    return import.meta.env.VITE_API_URL || 'https://pongs-shipping-backend-production.up.railway.app/api';
   }
 
   // In development, try environment variable first, then fallback
