@@ -257,74 +257,133 @@ function Home() {
     <div className="home overflow-x-hidden">
       <Header />
 
-      {/* Enhanced Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
+      {/* Enhanced Hero Section with Background Image */}
+      <section className="relative min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white py-12 md:py-24 overflow-hidden">
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 mobile-bg-hero"
+          style={{
+            backgroundImage: 'url(/frontpage.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center center',
+            backgroundRepeat: 'no-repeat',
+            filter: 'brightness(0.8)',
+            transform: 'scale(1.05)'
+          }}
+          role="img"
+          aria-label="Pong's Shipping Company - Your Bridge to Jamaica"
+        >
+          {/* Mobile-optimized overlay gradients */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30 md:from-black/70 md:via-black/30 md:to-black/20"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/60 via-blue-900/20 to-blue-900/60 md:from-blue-900/40 md:via-transparent md:to-blue-900/40"></div>
+        </div>
 
         {/* Enhanced animated background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-4 -left-4 w-32 h-32 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 opacity-20 animate-float"></div>
-          <div className="absolute top-1/4 right-12 w-24 h-24 rounded-full bg-gradient-to-r from-orange-400 to-yellow-400 opacity-20 animate-float animation-delay-1000"></div>
-          <div className="absolute bottom-20 left-20 w-28 h-28 rounded-full bg-gradient-to-r from-green-400 to-blue-400 opacity-20 animate-float animation-delay-2000"></div>
-          <div className="absolute top-1/2 right-1/4 w-16 h-16 rounded-full bg-gradient-to-r from-pink-400 to-red-400 opacity-20 animate-float animation-delay-3000"></div>
+          <div className="absolute -top-4 -left-4 w-32 h-32 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 opacity-10 animate-float"></div>
+          <div className="absolute top-1/4 right-12 w-24 h-24 rounded-full bg-gradient-to-r from-orange-400 to-yellow-400 opacity-10 animate-float animation-delay-1000"></div>
+          <div className="absolute bottom-20 left-20 w-28 h-28 rounded-full bg-gradient-to-r from-green-400 to-blue-400 opacity-10 animate-float animation-delay-2000"></div>
+          <div className="absolute top-1/2 right-1/4 w-16 h-16 rounded-full bg-gradient-to-r from-pink-400 to-red-400 opacity-10 animate-float animation-delay-3000"></div>
 
-          {/* Floating shipping icons */}
-          <div className="absolute top-20 right-20 text-white/10 animate-float animation-delay-1500">
+          {/* Floating shipping icons with reduced opacity */}
+          <div className="absolute top-20 right-20 text-white/5 animate-float animation-delay-1500">
             <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
             </svg>
           </div>
-          <div className="absolute bottom-32 right-32 text-white/10 animate-float animation-delay-2500">
+          <div className="absolute bottom-32 right-32 text-white/5 animate-float animation-delay-2500">
             <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
             </svg>
           </div>
         </div>
 
-        <div className="container mx-auto px-6 text-center relative z-10">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-6xl md:text-7xl font-black mb-6 transform transition-all duration-1000 animate-fade-in-down bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-              Pong's Shipping Company
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 transform transition-all duration-1000 delay-200 animate-fade-in-up text-blue-100 max-w-3xl mx-auto leading-relaxed">
-              Your trusted bridge between the United States and Jamaica. Fast, reliable, and affordable shipping solutions for all your needs.
-            </p>
+        <div className="container mx-auto px-4 md:px-6 relative z-10 flex items-center min-h-screen">
+          <div className="max-w-6xl mx-auto w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+              {/* Content Side */}
+              <div className="text-center lg:text-left pt-16 md:pt-8 lg:pt-0">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-4 md:mb-6 transform transition-all duration-1000 animate-fade-in-down bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent drop-shadow-lg leading-tight">
+                  Pong's Shipping Company
+                </h1>
+                <p className="text-lg sm:text-xl md:text-2xl mb-6 md:mb-8 transform transition-all duration-1000 delay-200 animate-fade-in-up text-blue-100 max-w-3xl mx-auto lg:mx-0 leading-relaxed drop-shadow-md px-2 lg:px-0">
+                  Your trusted bridge between the United States and Jamaica. Fast, reliable, and affordable shipping solutions for all your needs.
+                </p>
 
-            {/* Enhanced CTA buttons */}
-            <div className="flex flex-col sm:flex-row justify-center gap-6 mb-12">
-              <Link
-                to="/signup"
-                className="group relative overflow-hidden bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl animate-fade-in delay-500"
-              >
-                <span className="relative z-10">Get Started Today</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-600 to-orange-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-              </Link>
-              <a
-                href="#tracking"
-                className="group bg-transparent hover:bg-white/10 text-white font-bold py-4 px-8 rounded-full text-lg border-2 border-white transition-all duration-300 transform hover:scale-105 animate-fade-in delay-700 backdrop-blur-sm"
-              >
-                <span className="flex items-center justify-center">
-                  <svg className="w-5 h-5 mr-2 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                  Track Package
-                </span>
-              </a>
-            </div>
+                {/* Enhanced CTA buttons */}
+                <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 md:gap-6 mb-8 md:mb-12 px-4 sm:px-0">
+                  <Link
+                    to="/signup"
+                    className="group relative overflow-hidden bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 md:py-4 px-6 md:px-8 rounded-full text-base md:text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl animate-fade-in delay-500"
+                  >
+                    <span className="relative z-10">Get Started Today</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-orange-600 to-orange-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                  </Link>
+                  <a
+                    href="#tracking"
+                    className="group bg-white/10 hover:bg-white/20 text-white font-bold py-3 md:py-4 px-6 md:px-8 rounded-full text-base md:text-lg border-2 border-white/50 hover:border-white transition-all duration-300 transform hover:scale-105 animate-fade-in delay-700 backdrop-blur-sm"
+                  >
+                    <span className="flex items-center justify-center">
+                      <svg className="w-4 md:w-5 h-4 md:h-5 mr-2 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      Track Package
+                    </span>
+                  </a>
+                </div>
 
-            {/* Stats section */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-16 animate-fade-in delay-1000">
-              <div className="text-center transform hover:scale-105 transition-all duration-300">
-                <div className="text-3xl md:text-4xl font-bold text-green-400 mb-2">5-7</div>
-                <div className="text-sm md:text-base text-blue-200">Days Delivery</div>
+                {/* Stats section */}
+                <div className="grid grid-cols-3 gap-3 md:gap-6 mt-8 md:mt-16 animate-fade-in delay-1000 px-2">
+                  <div className="text-center transform hover:scale-105 transition-all duration-300">
+                    <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-400 mb-1 md:mb-2 drop-shadow-md">5-7</div>
+                    <div className="text-xs sm:text-sm md:text-base text-blue-200">Days Delivery</div>
+                  </div>
+                  <div className="text-center transform hover:scale-105 transition-all duration-300">
+                    <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-yellow-400 mb-1 md:mb-2 drop-shadow-md">2</div>
+                    <div className="text-xs sm:text-sm md:text-base text-blue-200">Convenient Locations</div>
+                  </div>
+                  <div className="text-center transform hover:scale-105 transition-all duration-300">
+                    <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-purple-400 mb-1 md:mb-2 drop-shadow-md">24/7</div>
+                    <div className="text-xs sm:text-sm md:text-base text-blue-200">Package Tracking</div>
+                  </div>
+                </div>
               </div>
-              <div className="text-center transform hover:scale-105 transition-all duration-300">
-                <div className="text-3xl md:text-4xl font-bold text-yellow-400 mb-2">2</div>
-                <div className="text-sm md:text-base text-blue-200">Convenient Locations</div>
-              </div>
-              <div className="text-center transform hover:scale-105 transition-all duration-300">
-                <div className="text-3xl md:text-4xl font-bold text-purple-400 mb-2">24/7</div>
-                <div className="text-sm md:text-base text-blue-200">Package Tracking</div>
+
+              {/* Image highlight area - subtle enhancement */}
+              <div className="hidden lg:block relative">
+                <div className="absolute inset-0 bg-white/5 rounded-3xl backdrop-blur-sm border border-white/10 transform rotate-3 scale-105"></div>
+                <div className="relative bg-white/10 rounded-2xl p-8 backdrop-blur-sm border border-white/20">
+                  <div className="text-center">
+                    <div className="inline-flex items-center justify-center w-20 h-20 bg-orange-500/20 rounded-full mb-6">
+                      <svg className="w-10 h-10 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold mb-4">From US to Your Door</h3>
+                    <p className="text-blue-200 mb-6">Professional delivery service connecting American retailers to Jamaican families, one package at a time.</p>
+                    <div className="flex items-center justify-center space-x-4 text-sm text-blue-300">
+                      <span className="flex items-center">
+                        <svg className="w-4 h-4 mr-1 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Secure
+                      </span>
+                      <span className="flex items-center">
+                        <svg className="w-4 h-4 mr-1 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Tracked
+                      </span>
+                      <span className="flex items-center">
+                        <svg className="w-4 h-4 mr-1 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Reliable
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -924,6 +983,20 @@ function Home() {
 
       {/* Enhanced Animation Styles */}
       <style jsx>{`
+        /* Mobile background optimization */
+        @media (max-width: 768px) {
+          .mobile-bg-hero {
+            background-position: 30% center !important;
+            background-size: cover !important;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .mobile-bg-hero {
+            background-position: 25% center !important;
+          }
+        }
+
         @keyframes fadeInDown {
           0% {
             opacity: 0;
