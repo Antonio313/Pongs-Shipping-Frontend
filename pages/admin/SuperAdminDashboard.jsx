@@ -117,25 +117,25 @@ function SuperAdminDashboard() {
       <Header />
 
       <main className="flex-grow">
-        {/* Header Section */}
-        <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white py-8">
-          <div className="container mx-auto px-6">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold mb-2">Super Admin Dashboard</h1>
-                <p className="text-purple-100">Complete system oversight and management</p>
+        {/* Mobile-Responsive Header Section */}
+        <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white py-6 sm:py-8">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="text-center md:text-left">
+                <h1 className="text-2xl sm:text-3xl font-bold mb-2">Super Admin Dashboard</h1>
+                <p className="text-purple-100 text-sm sm:text-base">Complete system oversight and management</p>
               </div>
-              <div className="mt-4 md:mt-0 flex items-center space-x-4">
+              <div className="w-full md:w-auto flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                 <select
                   value={selectedPeriod}
                   onChange={(e) => setSelectedPeriod(e.target.value)}
-                  className="bg-white/20 backdrop-blur-sm text-white rounded-lg px-3 py-2 border border-white/30"
+                  className="bg-white/20 backdrop-blur-sm text-white rounded-lg px-3 py-2 border border-white/30 w-full sm:w-auto"
                 >
                   <option value="7" className="text-gray-900">Last 7 days</option>
                   <option value="30" className="text-gray-900">Last 30 days</option>
                   <option value="90" className="text-gray-900">Last 90 days</option>
                 </select>
-                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4">
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 sm:p-4 text-center md:text-left w-full sm:w-auto">
                   <p className="text-sm">Welcome, {user?.first_name} {user?.last_name}</p>
                   <p className="text-sm">Role: Super Administrator</p>
                 </div>
@@ -144,10 +144,42 @@ function SuperAdminDashboard() {
           </div>
         </div>
 
-        <div className="container mx-auto px-6 py-8">
-          {/* Navigation Tabs */}
-          <div className="bg-white rounded-xl shadow-lg mb-8">
-            <div className="flex border-b overflow-x-auto">
+        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          {/* Mobile-Responsive Navigation Tabs */}
+          <div className="bg-white rounded-xl shadow-lg mb-6 sm:mb-8">
+            {/* Mobile Tab Navigation - Stacked Button Style */}
+            <div className="sm:hidden border-b border-gray-200">
+              <div className="grid grid-cols-2 gap-1 p-2">
+                {[
+                  { id: 'overview', label: 'Overview', icon: '📊' },
+                  { id: 'staff', label: 'Staff Performance', icon: '👥' },
+                  { id: 'analytics', label: 'Analytics', icon: '📈' },
+                  { id: 'management', label: 'Management', icon: '⚙️' },
+                  { id: 'activity', label: 'Activity Log', icon: '📋' }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setActiveSection(tab.id);
+                      window.location.hash = tab.id;
+                    }}
+                    className={`px-3 py-3 font-semibold text-xs transition-all duration-300 rounded-lg ${
+                      activeSection === tab.id
+                        ? 'text-purple-600 bg-purple-50 border-2 border-purple-200'
+                        : 'text-gray-600 hover:text-purple-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center space-y-1">
+                      <span className="text-lg">{tab.icon}</span>
+                      <span className="leading-tight">{tab.label}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Desktop Tab Navigation */}
+            <div className="hidden sm:flex border-b overflow-x-auto">
               {[
                 { id: 'overview', label: 'Overview', icon: '📊' },
                 { id: 'staff', label: 'Staff Performance', icon: '👥' },
@@ -173,43 +205,43 @@ function SuperAdminDashboard() {
               ))}
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {/* Overview Section */}
               {activeSection === 'overview' && dashboardData && (
                 <div className="space-y-6">
-                  {/* Key Metrics */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl">
+                  {/* Mobile-Responsive Key Metrics */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 sm:p-6 rounded-xl">
                       <h3 className="text-sm font-medium opacity-90">Total Revenue</h3>
-                      <p className="text-3xl font-bold">{formatCurrency(dashboardData.totalStats.total_revenue)}</p>
-                      <p className="text-sm opacity-75">Today: {formatCurrency(dashboardData.todayStats.revenue_today)}</p>
+                      <p className="text-2xl sm:text-3xl font-bold">{formatCurrency(dashboardData.totalStats.total_revenue)}</p>
+                      <p className="text-xs sm:text-sm opacity-75">Today: {formatCurrency(dashboardData.todayStats.revenue_today)}</p>
                     </div>
 
-                    <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl">
+                    <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 sm:p-6 rounded-xl">
                       <h3 className="text-sm font-medium opacity-90">Total Packages</h3>
-                      <p className="text-3xl font-bold">{dashboardData.totalStats.total_packages}</p>
-                      <p className="text-sm opacity-75">Today: {dashboardData.todayStats.packages_today}</p>
+                      <p className="text-2xl sm:text-3xl font-bold">{dashboardData.totalStats.total_packages}</p>
+                      <p className="text-xs sm:text-sm opacity-75">Today: {dashboardData.todayStats.packages_today}</p>
                     </div>
 
-                    <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl">
+                    <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 sm:p-6 rounded-xl">
                       <h3 className="text-sm font-medium opacity-90">Total Customers</h3>
-                      <p className="text-3xl font-bold">{dashboardData.totalStats.total_customers}</p>
-                      <p className="text-sm opacity-75">Today: {dashboardData.todayStats.customers_today}</p>
+                      <p className="text-2xl sm:text-3xl font-bold">{dashboardData.totalStats.total_customers}</p>
+                      <p className="text-xs sm:text-sm opacity-75">Today: {dashboardData.todayStats.customers_today}</p>
                     </div>
 
-                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-xl">
+                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 sm:p-6 rounded-xl">
                       <h3 className="text-sm font-medium opacity-90">Active Staff</h3>
-                      <p className="text-3xl font-bold">{dashboardData.totalStats.total_staff}</p>
-                      <p className="text-sm opacity-75">Active: {dashboardData.activeStaff}</p>
+                      <p className="text-2xl sm:text-3xl font-bold">{dashboardData.totalStats.total_staff}</p>
+                      <p className="text-xs sm:text-sm opacity-75">Active: {dashboardData.activeStaff}</p>
                     </div>
                   </div>
 
-                  {/* System Overview */}
+                  {/* Mobile-Responsive System Overview */}
                   {systemOverview && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                       {/* Package Status Distribution */}
-                      <div className="bg-white p-6 rounded-xl border border-gray-200">
-                        <h3 className="text-lg font-semibold mb-4">Package Status Distribution</h3>
+                      <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200">
+                        <h3 className="text-base sm:text-lg font-semibold mb-4">Package Status Distribution</h3>
                         <div className="space-y-3">
                           {systemOverview.packagesByStatus.map(status => (
                             <div key={status.status} className="flex justify-between items-center">
@@ -223,8 +255,8 @@ function SuperAdminDashboard() {
                       </div>
 
                       {/* Customer Verification by Branch */}
-                      <div className="bg-white p-6 rounded-xl border border-gray-200">
-                        <h3 className="text-lg font-semibold mb-4">Customer Verification by Branch</h3>
+                      <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200">
+                        <h3 className="text-base sm:text-lg font-semibold mb-4">Customer Verification by Branch</h3>
                         <div className="space-y-3">
                           {systemOverview.customersByBranch.map(branch => (
                             <div key={branch.branch} className="space-y-2">
@@ -248,8 +280,8 @@ function SuperAdminDashboard() {
                   )}
 
                   {/* Recent Activity */}
-                  <div className="bg-white p-6 rounded-xl border border-gray-200">
-                    <h3 className="text-lg font-semibold mb-4">Recent System Activity</h3>
+                  <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200">
+                    <h3 className="text-base sm:text-lg font-semibold mb-4">Recent System Activity</h3>
                     <div className="space-y-3">
                       {dashboardData.recentActivity.slice(0, 5).map(activity => (
                         <div key={activity.log_id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
@@ -271,18 +303,18 @@ function SuperAdminDashboard() {
                 </div>
               )}
 
-              {/* Staff Performance Section */}
+              {/* Mobile-Responsive Staff Performance Section */}
               {activeSection === 'staff' && (
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-gray-800">Staff Performance Analytics</h2>
-                    <div className="flex items-center space-x-4">
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Staff Performance Analytics</h2>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
                       <div className="flex items-center space-x-2">
                         <span className="text-sm text-gray-600">Period:</span>
                         <select
                           value={selectedPeriod}
                           onChange={(e) => setSelectedPeriod(e.target.value)}
-                          className="border border-gray-300 rounded px-3 py-1 text-sm"
+                          className="border border-gray-300 rounded px-3 py-1 text-sm min-w-[120px]"
                         >
                           <option value="7">Last 7 days</option>
                           <option value="30">Last 30 days</option>
@@ -292,12 +324,12 @@ function SuperAdminDashboard() {
                       <button
                         onClick={() => loadDashboardData()}
                         disabled={loading}
-                        className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                        className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 w-full sm:w-auto"
                       >
                         <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
-                        <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
+                        <span className="text-sm sm:text-base">{loading ? 'Refreshing...' : 'Refresh'}</span>
                       </button>
                     </div>
                   </div>
@@ -315,9 +347,9 @@ function SuperAdminDashboard() {
                         )}
                       </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                         {staffPerformance.staffSummary.map(staff => (
-                      <div key={staff.staff_id} className="bg-white p-6 rounded-xl border border-gray-200 hover:shadow-lg transition-shadow duration-200">
+                      <div key={staff.staff_id} className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200 hover:shadow-lg transition-shadow duration-200">
                         <div className="flex items-start justify-between mb-4">
                           <div>
                             <h3 className="font-semibold text-lg">{staff.first_name} {staff.last_name}</h3>
@@ -374,18 +406,18 @@ function SuperAdminDashboard() {
                       </div>
 
                       {/* Real-time Activity Feed */}
-                      <div className="bg-white p-6 rounded-xl border border-gray-200">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-semibold">Live Activity Feed</h3>
+                      <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-4">
+                          <h3 className="text-base sm:text-lg font-semibold">Live Activity Feed</h3>
                           <div className="flex items-center space-x-2">
                             <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                             <span className="text-sm text-blue-600">Real-time</span>
                           </div>
                         </div>
                         {staffPerformance.recentActivity && staffPerformance.recentActivity.length > 0 ? (
-                          <div className="space-y-3 max-h-96 overflow-y-auto">
+                          <div className="space-y-2 sm:space-y-3 max-h-80 sm:max-h-96 overflow-y-auto">
                             {staffPerformance.recentActivity.slice(0, 20).map(activity => (
-                              <div key={activity.log_id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-150">
+                              <div key={activity.log_id} className="flex items-start space-x-2 sm:space-x-3 p-2 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-150">
                                 <div className="flex-shrink-0">
                                   {activity.action_type === 'package_status_update' && (
                                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -463,14 +495,14 @@ function SuperAdminDashboard() {
                 </div>
               )}
 
-              {/* Analytics Section */}
+              {/* Mobile-Responsive Analytics Section */}
               {activeSection === 'analytics' && revenueAnalytics && (
-                <div className="space-y-6">
-                  <h2 className="text-2xl font-bold text-gray-800">Revenue Analytics</h2>
+                <div className="space-y-4 sm:space-y-6">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Revenue Analytics</h2>
 
                   {/* Revenue by Branch */}
-                  <div className="bg-white p-6 rounded-xl border border-gray-200">
-                    <h3 className="text-lg font-semibold mb-4">Revenue by Branch</h3>
+                  <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200">
+                    <h3 className="text-base sm:text-lg font-semibold mb-4">Revenue by Branch</h3>
                     <div className="space-y-4">
                       {revenueAnalytics.branchRevenue.map(branch => {
                         const maxRevenue = Math.max(...revenueAnalytics.branchRevenue.map(b => parseFloat(b.revenue)));
@@ -497,24 +529,24 @@ function SuperAdminDashboard() {
                     </div>
                   </div>
 
-                  {/* Daily Revenue Trend */}
-                  <div className="bg-white p-6 rounded-xl border border-gray-200">
-                    <h3 className="text-lg font-semibold mb-4">Daily Revenue Trend</h3>
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
+                  {/* Daily Revenue Trend - Mobile Optimized */}
+                  <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200">
+                    <h3 className="text-base sm:text-lg font-semibold mb-4">Daily Revenue Trend</h3>
+                    <div className="overflow-x-auto -mx-2 sm:mx-0">
+                      <table className="w-full min-w-[300px]">
                         <thead>
                           <tr className="border-b">
-                            <th className="text-left py-2">Date</th>
-                            <th className="text-left py-2">Packages</th>
-                            <th className="text-left py-2">Revenue</th>
+                            <th className="text-left py-2 px-2 sm:px-0 text-sm sm:text-base">Date</th>
+                            <th className="text-left py-2 px-2 sm:px-0 text-sm sm:text-base">Packages</th>
+                            <th className="text-left py-2 px-2 sm:px-0 text-sm sm:text-base">Revenue</th>
                           </tr>
                         </thead>
                         <tbody>
                           {revenueAnalytics.dailyRevenue.slice(0, 10).map(day => (
                             <tr key={day.date} className="border-b border-gray-100">
-                              <td className="py-2">{new Date(day.date).toLocaleDateString()}</td>
-                              <td className="py-2">{day.package_count}</td>
-                              <td className="py-2 font-semibold text-green-600">{formatCurrency(day.revenue)}</td>
+                              <td className="py-2 px-2 sm:px-0 text-sm sm:text-base">{new Date(day.date).toLocaleDateString()}</td>
+                              <td className="py-2 px-2 sm:px-0 text-sm sm:text-base">{day.package_count}</td>
+                              <td className="py-2 px-2 sm:px-0 text-sm sm:text-base font-semibold text-green-600">{formatCurrency(day.revenue)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -529,41 +561,41 @@ function SuperAdminDashboard() {
                 <ManagementSection onUpdate={loadDashboardData} />
               )}
 
-              {/* Activity Log Section */}
+              {/* Mobile-Responsive Activity Log Section */}
               {activeSection === 'activity' && activityLog && (
-                <div className="space-y-6">
-                  <h2 className="text-2xl font-bold text-gray-800">System Activity Log</h2>
+                <div className="space-y-4 sm:space-y-6">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800">System Activity Log</h2>
                   <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
+                    <div className="overflow-x-auto -mx-2 sm:mx-0">
+                      <table className="w-full min-w-[600px]">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Staff</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Impact</th>
+                            <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+                            <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Staff</th>
+                            <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                            <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Description</th>
+                            <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Impact</th>
                           </tr>
                         </thead>
                         <tbody>
                           {activityLog.activities.map(activity => (
                             <tr key={activity.log_id} className="border-b border-gray-100">
-                              <td className="px-4 py-3 text-sm">{formatDate(activity.created_at)}</td>
-                              <td className="px-4 py-3">
+                              <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm">{formatDate(activity.created_at)}</td>
+                              <td className="px-2 sm:px-4 py-3">
                                 <div>
-                                  <p className="font-medium text-sm">{activity.first_name} {activity.last_name}</p>
+                                  <p className="font-medium text-xs sm:text-sm">{activity.first_name} {activity.last_name}</p>
                                   <p className="text-xs text-gray-500">{activity.branch}</p>
                                 </div>
                               </td>
-                              <td className="px-4 py-3">
-                                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                              <td className="px-2 sm:px-4 py-3">
+                                <span className="px-1 sm:px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
                                   {activity.action_type.replace('_', ' ')}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-sm max-w-xs truncate">{activity.description}</td>
-                              <td className="px-4 py-3">
+                              <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm max-w-xs truncate hidden sm:table-cell">{activity.description}</td>
+                              <td className="px-2 sm:px-4 py-3">
                                 {activity.revenue_impact > 0 && (
-                                  <span className="text-green-600 font-semibold text-sm">
+                                  <span className="text-green-600 font-semibold text-xs sm:text-sm">
                                     +{formatCurrency(activity.revenue_impact)}
                                   </span>
                                 )}
@@ -622,53 +654,54 @@ function ManagementSection({ onUpdate }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-800">Staff Management</h2>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Staff Management</h2>
         <button
           onClick={() => setShowAddStaffModal(true)}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-300"
+          className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-300 w-full sm:w-auto"
         >
           Add New Staff
         </button>
       </div>
 
-      {/* Staff List */}
+      {/* Mobile-Responsive Staff List */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto -mx-2 sm:mx-0">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Branch</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Email</th>
+                <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Branch</th>
+                <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody>
               {staffList.map(staff => (
                 <tr key={staff.user_id} className="border-b border-gray-100">
-                  <td className="px-4 py-3">
+                  <td className="px-2 sm:px-4 py-3">
                     <div>
-                      <p className="font-medium">{staff.first_name} {staff.last_name}</p>
-                      <p className="text-sm text-gray-500">{staff.phone}</p>
+                      <p className="font-medium text-sm sm:text-base">{staff.first_name} {staff.last_name}</p>
+                      <p className="text-xs sm:text-sm text-gray-500">{staff.phone}</p>
+                      <p className="text-xs text-gray-500 sm:hidden">{staff.email}</p>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm">{staff.email}</td>
-                  <td className="px-4 py-3 text-sm">{staff.branch}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  <td className="px-2 sm:px-4 py-3 text-sm hidden sm:table-cell">{staff.email}</td>
+                  <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm">{staff.branch}</td>
+                  <td className="px-2 sm:px-4 py-3">
+                    <span className={`px-1 sm:px-2 py-1 rounded-full text-xs font-medium ${
                       staff.role === 'S'
                         ? 'bg-purple-100 text-purple-800'
                         : 'bg-blue-100 text-blue-800'
                     }`}>
-                      {staff.role === 'S' ? 'Super Admin' : 'Admin'}
+                      {staff.role === 'S' ? 'Super' : 'Admin'}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  <td className="px-2 sm:px-4 py-3">
+                    <span className={`px-1 sm:px-2 py-1 rounded-full text-xs font-medium ${
                       staff.is_verified
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
@@ -676,10 +709,10 @@ function ManagementSection({ onUpdate }) {
                       {staff.is_verified ? 'Verified' : 'Unverified'}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 sm:px-4 py-3">
                     <button
                       onClick={() => handleDeleteStaff(staff.user_id, `${staff.first_name} ${staff.last_name}`)}
-                      className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1 rounded transition-all duration-300"
+                      className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-2 sm:px-3 py-1 rounded transition-all duration-300"
                     >
                       Delete
                     </button>
@@ -739,8 +772,8 @@ function AddStaffModal({ onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4 p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-800">Add New Staff Member</h2>
+        <div className="flex justify-between items-center mb-4 p-4 sm:p-6 border-b">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Add New Staff Member</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors duration-300"
@@ -751,7 +784,7 @@ function AddStaffModal({ onClose, onSuccess }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
