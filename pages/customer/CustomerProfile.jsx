@@ -26,10 +26,21 @@ function CustomerProfile() {
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/customer/profile/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setStats(response.data.stats);
+
+      // Ensure we have valid stats data or use defaults
+      const statsData = response.data.stats || {
+        total_packages: 0,
+        delivered_packages: 0,
+        in_transit_packages: 0,
+        total_amount_spent: 0,
+        last_delivery_date: null
+      };
+
+      setStats(statsData);
     } catch (error) {
       console.error('Error fetching customer stats:', error);
       setError('Failed to load profile statistics');
+      // Keep the default stats structure on error
     } finally {
       setLoading(false);
     }
@@ -62,7 +73,7 @@ function CustomerProfile() {
     });
   };
 
-  if (loading) {
+  if (loading || !stats) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -115,7 +126,7 @@ function CustomerProfile() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Packages</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.total_packages}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.total_packages || 0}</p>
                 </div>
               </div>
             </div>
@@ -129,7 +140,7 @@ function CustomerProfile() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-600">Delivered</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.delivered_packages}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.delivered_packages || 0}</p>
                 </div>
               </div>
             </div>
@@ -143,7 +154,7 @@ function CustomerProfile() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-600">In Transit</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.in_transit_packages}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.in_transit_packages || 0}</p>
                 </div>
               </div>
             </div>
@@ -157,7 +168,7 @@ function CustomerProfile() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Spent</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.total_amount_spent)}</p>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats?.total_amount_spent || 0)}</p>
                 </div>
               </div>
             </div>
@@ -196,8 +207,11 @@ function CustomerProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Address</label>
-                  <p className="text-gray-900">{user?.address || 'Not provided'}</p>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Complete Shipping Address</label>
+                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                    <p className="text-blue-900 font-medium break-words">{user?.address || 'Not provided'}</p>
+                    <p className="text-blue-700 text-xs mt-1">Use this exact address for online shopping deliveries</p>
+                  </div>
                 </div>
 
                 <div>
@@ -230,14 +244,14 @@ function CustomerProfile() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-2">Last Package</label>
-                  <p className="text-gray-900 font-medium">{formatDateTime(stats.last_delivery_date)}</p>
+                  <p className="text-gray-900 font-medium">{formatDateTime(stats?.last_delivery_date)}</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-2">Average Package Cost</label>
                   <p className="text-gray-900 font-medium">
-                    {stats.total_packages > 0
-                      ? formatCurrency(stats.total_amount_spent / stats.total_packages)
+                    {(stats?.total_packages || 0) > 0
+                      ? formatCurrency((stats?.total_amount_spent || 0) / (stats?.total_packages || 1))
                       : formatCurrency(0)
                     }
                   </p>
@@ -246,8 +260,8 @@ function CustomerProfile() {
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-2">Delivery Rate</label>
                   <p className="text-gray-900 font-medium">
-                    {stats.total_packages > 0
-                      ? `${Math.round((stats.delivered_packages / stats.total_packages) * 100)}%`
+                    {(stats?.total_packages || 0) > 0
+                      ? `${Math.round(((stats?.delivered_packages || 0) / (stats?.total_packages || 1)) * 100)}%`
                       : '0%'
                     }
                   </p>

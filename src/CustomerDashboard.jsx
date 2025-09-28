@@ -24,22 +24,56 @@ function CustomerDashboard() {
   const [packageFilter, setPackageFilter] = useState('all'); // 'all', 'delivered', 'outstanding'
   const [preAlertFilter, setPreAlertFilter] = useState('all'); // 'all', 'pending'
 
-  // Parse the address into Address 1 and Address 2
+  // Parse the address into comprehensive address components
   const parseAddress = (address) => {
-    if (!address) return { address1: '', address2: '' };
-    
+    if (!address) return {
+      address1: '3132 NW 43rd Street',
+      address2: `PSC ${user?.branch || 'UNKNOWN'} ${user?.user_id < 10 ? `0${user?.user_id}` : user?.user_id}`,
+      city: 'Lauderdale Lakes',
+      state: 'Florida',
+      zipCode: '33309',
+      formatted: address
+    };
+
+    // Try to parse the formatted address
+    const parts = address.split(', ');
+    if (parts.length >= 4) {
+      const address1 = parts[0] || '3132 NW 43rd Street';
+      const address2 = parts[1] || `PSC ${user?.branch || 'UNKNOWN'} ${user?.user_id < 10 ? `0${user?.user_id}` : user?.user_id}`;
+      const city = parts[2] || 'Lauderdale Lakes';
+      const stateZip = parts[3] || 'Florida 33309';
+      const [state, zipCode] = stateZip.split(' ');
+
+      return { address1, address2, city, state: state || 'Florida', zipCode: zipCode || '33309', formatted: address };
+    }
+
+    // Fallback parsing for legacy addresses
     const pscIndex = address.indexOf('PSC');
     if (pscIndex === -1) {
-      return { address1: address, address2: '' };
+      return {
+        address1: address,
+        address2: `PSC ${user?.branch || 'UNKNOWN'} ${user?.user_id < 10 ? `0${user?.user_id}` : user?.user_id}`,
+        city: 'Lauderdale Lakes',
+        state: 'Florida',
+        zipCode: '33309',
+        formatted: address
+      };
     }
-    
+
     const address1 = address.substring(0, pscIndex).trim();
     const address2 = address.substring(pscIndex).trim();
-    
-    return { address1, address2 };
+
+    return {
+      address1,
+      address2,
+      city: 'Lauderdale Lakes',
+      state: 'Florida',
+      zipCode: '33309',
+      formatted: address
+    };
   };
 
-  const { address1, address2 } = parseAddress(user?.address);
+  const addressInfo = parseAddress(user?.address);
 
   // Load data
   useEffect(() => {
@@ -289,83 +323,117 @@ function CustomerDashboard() {
       <Header />
       
       <main className="flex-grow">
-        {/* Welcome Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-8">
-          <div className="container mx-auto px-6">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.first_name}!</h1>
-                <p className="text-blue-100">Track your shipments and manage your pre-alerts</p>
+        {/* Mobile-Responsive Welcome Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-6 sm:py-8">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="text-center md:text-left w-full md:w-auto">
+                <h1 className="text-2xl sm:text-3xl font-bold mb-2">Welcome back, {user?.first_name}!</h1>
+                <p className="text-blue-100 text-sm sm:text-base">Track your shipments and manage your pre-alerts</p>
               </div>
-              <div className="mt-4 md:mt-0 flex flex-col space-y-3">
-                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4">
+              <div className="w-full md:w-auto flex flex-col space-y-3">
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 sm:p-4 text-center md:text-left">
                   <p className="text-sm">Customer ID: {user?.user_id}</p>
                   <p className="text-sm">Pickup Branch: {user?.branch}</p>
                 </div>
                 <button
                   onClick={() => setShowPreAlertModal(true)}
-                  className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30 px-4 py-2 rounded-lg transition-all duration-300 flex items-center justify-center"
+                  className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border border-white/30 px-4 py-2 rounded-lg transition-all duration-300 flex items-center justify-center w-full md:w-auto"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  Create Pre-Alert
+                  <span className="text-sm sm:text-base">Create Pre-Alert</span>
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="container mx-auto px-6 py-8">
-          {/* User Address Information */}
-          <div className="bg-gradient-to-r from-white to-blue-50 rounded-xl shadow-lg border border-blue-100 p-6 mb-8 transform transition-all duration-200 hover:shadow-xl">
-            <div className="flex items-center mb-4">
-                <div className="bg-blue-100 p-2 rounded-lg mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          {/* Enhanced User Address Information */}
+          <div className="bg-gradient-to-r from-white to-blue-50 rounded-xl shadow-lg border border-blue-100 p-4 sm:p-6 mb-6 sm:mb-8 transform transition-all duration-200 hover:shadow-xl">
+            <div className="flex items-center mb-4 sm:mb-6">
+              <div className="bg-blue-100 p-2 sm:p-3 rounded-lg mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                </div>
-                <h2 className="text-xl font-semibold text-gray-800">Your Shipping Address</h2>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                <h3 className="text-sm font-medium text-gray-600 mb-1">Address Line 1</h3>
-                <p className="text-gray-800 font-medium">{address1}</p>
-                </div>
-                <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                <h3 className="text-sm font-medium text-gray-600 mb-1">Address Line 2</h3>
-                <p className="text-gray-800 font-medium">{address2}</p>
-                </div>
-                <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                <h3 className="text-sm font-medium text-gray-600 mb-1">Full Address</h3>
-                <p className="text-gray-800 font-medium">{user?.address}</p>
-                </div>
-                <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                <h3 className="text-sm font-medium text-gray-600 mb-1">Contact Info</h3>
-                <p className="text-gray-800">{user?.email}</p>
-                {user?.phone && <p className="text-gray-800">{user?.phone}</p>}
-                </div>
-            </div>
+              </div>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Your Complete Shipping Address</h2>
             </div>
 
-          {/* Tracking Search */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Track Your Package</h2>
-            <form onSubmit={handleTrackPackage} className="flex gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <h3 className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Address Line 1</h3>
+                <p className="text-gray-800 font-medium text-sm sm:text-base">{addressInfo.address1}</p>
+              </div>
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <h3 className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Address Line 2 (PSC)</h3>
+                <p className="text-gray-800 font-medium text-sm sm:text-base">{addressInfo.address2}</p>
+              </div>
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <h3 className="text-xs sm:text-sm font-medium text-gray-600 mb-1">City</h3>
+                <p className="text-gray-800 font-medium text-sm sm:text-base">{addressInfo.city}</p>
+              </div>
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <h3 className="text-xs sm:text-sm font-medium text-gray-600 mb-1">State</h3>
+                <p className="text-gray-800 font-medium text-sm sm:text-base">{addressInfo.state}</p>
+              </div>
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <h3 className="text-xs sm:text-sm font-medium text-gray-600 mb-1">ZIP Code</h3>
+                <p className="text-gray-800 font-medium text-sm sm:text-base">{addressInfo.zipCode}</p>
+              </div>
+              <div className="bg-gradient-to-r from-green-50 to-green-100 p-3 rounded-lg border border-green-200">
+                <h3 className="text-xs sm:text-sm font-medium text-green-700 mb-1">Complete Address</h3>
+                <p className="text-green-800 font-medium text-sm sm:text-base break-words">{addressInfo.formatted || user?.address}</p>
+              </div>
+            </div>
+
+            {/* Contact Information */}
+            <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
+                <h3 className="text-xs sm:text-sm font-medium text-purple-700 mb-1">Email Address</h3>
+                <p className="text-purple-800 font-medium text-sm sm:text-base break-words">{user?.email}</p>
+              </div>
+              <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
+                <h3 className="text-xs sm:text-sm font-medium text-purple-700 mb-1">Phone Number</h3>
+                <p className="text-purple-800 font-medium text-sm sm:text-base">{user?.phone || 'Not provided'}</p>
+              </div>
+            </div>
+
+            {/* Important Notice */}
+            <div className="mt-4 sm:mt-6 bg-amber-50 p-3 sm:p-4 rounded-lg border border-amber-200">
+              <div className="flex items-start space-x-2">
+                <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <div>
+                  <h4 className="text-amber-800 font-semibold text-sm">⚠️ Important Address Information</h4>
+                  <p className="text-amber-700 text-xs sm:text-sm mt-1">
+                    This is your unique shipping address for all packages. Use this exact address when shopping online to ensure proper delivery to the PSC {user?.branch} location.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile-Responsive Tracking Search */}
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Track Your Package</h2>
+            <form onSubmit={handleTrackPackage} className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
               <input
                 type="text"
                 value={trackingNumber}
                 onChange={(e) => setTrackingNumber(e.target.value)}
                 placeholder="Enter tracking number (e.g., TRK123456789)"
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
               />
               <button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 w-full sm:w-auto"
               >
-                Track
+                <span className="text-sm sm:text-base">Track Package</span>
               </button>
             </form>
 
@@ -448,47 +516,95 @@ function CustomerDashboard() {
             )}
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {/* Mobile-Responsive Quick Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <button
               onClick={() => handleStatsCardClick('total-packages')}
-              className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group"
+              className="bg-white rounded-xl shadow-lg p-4 sm:p-6 text-center hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group"
             >
-              <div className="text-3xl font-bold text-blue-600 mb-2 group-hover:text-blue-700">{packages.length}</div>
-              <div className="text-gray-600 group-hover:text-gray-800">Total Packages</div>
+              <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-2 group-hover:text-blue-700">{packages.length}</div>
+              <div className="text-sm sm:text-base text-gray-600 group-hover:text-gray-800">Total Packages</div>
             </button>
             <button
               onClick={() => handleStatsCardClick('delivered-packages')}
-              className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group"
+              className="bg-white rounded-xl shadow-lg p-4 sm:p-6 text-center hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group"
             >
-              <div className="text-3xl font-bold text-green-600 mb-2 group-hover:text-green-700">
+              <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-2 group-hover:text-green-700">
                 {packages.filter(p => p.status === 'Delivered').length}
               </div>
-              <div className="text-gray-600 group-hover:text-gray-800">Delivered</div>
+              <div className="text-sm sm:text-base text-gray-600 group-hover:text-gray-800">Delivered</div>
             </button>
             <button
               onClick={() => handleStatsCardClick('pending-prealerts')}
-              className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group"
+              className="bg-white rounded-xl shadow-lg p-4 sm:p-6 text-center hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group"
             >
-              <div className="text-3xl font-bold text-yellow-600 mb-2 group-hover:text-yellow-700">
+              <div className="text-2xl sm:text-3xl font-bold text-yellow-600 mb-2 group-hover:text-yellow-700">
                 {preAlerts.filter(p => p.status === 'U').length}
               </div>
-              <div className="text-gray-600 group-hover:text-gray-800">Pending Pre-Alerts</div>
+              <div className="text-sm sm:text-base text-gray-600 group-hover:text-gray-800">Pending Pre-Alerts</div>
             </button>
             <button
               onClick={() => handleStatsCardClick('outstanding-packages')}
-              className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group"
+              className="bg-white rounded-xl shadow-lg p-4 sm:p-6 text-center hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group"
             >
-              <div className="text-3xl font-bold text-purple-600 mb-2 group-hover:text-purple-700">
+              <div className="text-2xl sm:text-3xl font-bold text-purple-600 mb-2 group-hover:text-purple-700">
                 {outstandingPackagesCount}
               </div>
-              <div className="text-gray-600 group-hover:text-gray-800">Outstanding Packages</div>
+              <div className="text-sm sm:text-base text-gray-600 group-hover:text-gray-800">Outstanding Packages</div>
             </button>
           </div>
 
-          {/* Navigation Tabs */}
-          <div className="bg-white rounded-xl shadow-lg mb-8">
-            <div className="flex border-b">
+          {/* Mobile-Responsive Navigation Tabs */}
+          <div className="bg-white rounded-xl shadow-lg mb-6 sm:mb-8">
+            {/* Mobile Tab Navigation - Stacked for Better UX */}
+            <div className="sm:hidden border-b border-gray-200">
+              <div className="grid grid-cols-3 gap-1 p-2">
+                <button
+                  onClick={() => handleTabChange('overview')}
+                  className={`px-3 py-3 font-semibold text-xs transition-all duration-300 rounded-lg ${
+                    activeTab === 'overview'
+                      ? 'text-blue-600 bg-blue-50 border-2 border-blue-200'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex flex-col items-center space-y-1">
+                    <span className="text-lg">📊</span>
+                    <span>Overview</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleTabChange('packages')}
+                  className={`px-3 py-3 font-semibold text-xs transition-all duration-300 rounded-lg ${
+                    activeTab === 'packages'
+                      ? 'text-blue-600 bg-blue-50 border-2 border-blue-200'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex flex-col items-center space-y-1">
+                    <span className="text-lg">📦</span>
+                    <span>Packages</span>
+                    <span className="text-xs">({packages.length})</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleTabChange('prealerts')}
+                  className={`px-3 py-3 font-semibold text-xs transition-all duration-300 rounded-lg ${
+                    activeTab === 'prealerts'
+                      ? 'text-blue-600 bg-blue-50 border-2 border-blue-200'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex flex-col items-center space-y-1">
+                    <span className="text-lg">🚨</span>
+                    <span>Pre-Alerts</span>
+                    <span className="text-xs">({preAlerts.length})</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop Tab Navigation */}
+            <div className="hidden sm:flex border-b">
               <button
                 onClick={() => handleTabChange('overview')}
                 className={`px-6 py-4 font-semibold transition-all duration-300 ${
@@ -497,7 +613,10 @@ function CustomerDashboard() {
                     : 'text-gray-600 hover:text-blue-600'
                 }`}
               >
-                Overview
+                <span className="flex items-center space-x-2">
+                  <span>📊</span>
+                  <span>Overview</span>
+                </span>
               </button>
               <button
                 onClick={() => handleTabChange('packages')}
@@ -507,7 +626,10 @@ function CustomerDashboard() {
                     : 'text-gray-600 hover:text-blue-600'
                 }`}
               >
-                Packages ({packages.length})
+                <span className="flex items-center space-x-2">
+                  <span>📦</span>
+                  <span>Packages ({packages.length})</span>
+                </span>
                 {packageFilter !== 'all' && (
                   <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded-full">
                     {packageFilter === 'delivered' ? 'Delivered' : 'Outstanding'}
@@ -522,7 +644,10 @@ function CustomerDashboard() {
                     : 'text-gray-600 hover:text-blue-600'
                 }`}
               >
-                Pre-Alerts ({preAlerts.length})
+                <span className="flex items-center space-x-2">
+                  <span>🚨</span>
+                  <span>Pre-Alerts ({preAlerts.length})</span>
+                </span>
                 {preAlertFilter !== 'all' && (
                   <span className="ml-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-600 rounded-full">
                     Pending
