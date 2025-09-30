@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import axios from 'axios';
+import { adminAPI } from '../../services/api';
 import Header from '../../src/Header';
 import Footer from '../../src/Footer';
 
@@ -23,13 +23,13 @@ function AdminProfile() {
 
   const fetchAdminStats = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/admin/profile/stats`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await adminAPI.getProfileStats();
 
       // Defensive check: ensure stats object exists with all required fields
       const receivedStats = response.data?.stats || {};
+
+      console.log('📊 Admin Stats Response:', receivedStats); // Debug log
+
       setStats({
         deliveries_count: receivedStats.deliveries_count || 0,
         total_amount_handled: receivedStats.total_amount_handled || 0,
@@ -39,7 +39,8 @@ function AdminProfile() {
         last_delivery: receivedStats.last_delivery || null
       });
     } catch (error) {
-      console.error('Error fetching admin stats:', error);
+      console.error('❌ Error fetching admin stats:', error);
+      console.error('Error details:', error.response?.data || error.message);
       setError('Failed to load profile statistics');
     } finally {
       setLoading(false);

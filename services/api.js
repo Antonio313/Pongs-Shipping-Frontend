@@ -155,6 +155,15 @@ export const adminAPI = {
 
   // Get specific customers with their pre-alerts (admin only)
   getCustomerDetails: (customerId) => api.get(`/admin/customers/${customerId}`),
+
+  // Get admin profile statistics
+  getProfileStats: () => api.get('/admin/profile/stats'),
+
+  // Update admin profile
+  updateProfile: (data) => api.put('/admin/profile', data),
+
+  // Change admin password
+  changePassword: (data) => api.put('/admin/profile/password', data),
 }
 
 // Transfers API calls
