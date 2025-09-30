@@ -7,8 +7,8 @@ const getApiBaseUrl = () => {
     return import.meta.env.VITE_API_URL || 'https://pongs-shipping-backend-production.up.railway.app/api';
   }
 
-  // In development, try environment variable first, then fallback
-  return import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  // In development, use proxy path (Vite will forward /api to localhost:3000)
+  return import.meta.env.VITE_API_URL || '/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
