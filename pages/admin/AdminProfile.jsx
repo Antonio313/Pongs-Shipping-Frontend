@@ -27,7 +27,17 @@ function AdminProfile() {
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/admin/profile/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setStats(response.data.stats);
+
+      // Defensive check: ensure stats object exists with all required fields
+      const receivedStats = response.data?.stats || {};
+      setStats({
+        deliveries_count: receivedStats.deliveries_count || 0,
+        total_amount_handled: receivedStats.total_amount_handled || 0,
+        packages_processed: receivedStats.packages_processed || 0,
+        customers_served: receivedStats.customers_served || 0,
+        total_packages_handled: receivedStats.total_packages_handled || receivedStats.packages_processed || 0,
+        last_delivery: receivedStats.last_delivery || null
+      });
     } catch (error) {
       console.error('Error fetching admin stats:', error);
       setError('Failed to load profile statistics');
