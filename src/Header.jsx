@@ -169,20 +169,7 @@ function Header() {
                 </a>
               </>
             )}
-
-            {/* Authenticated user navigation */}
-            {isAuthenticated && (
-              <>
-                <Link
-                  to={user?.role === 'A' ? '/adminDashboard' : user?.role === 'S' ? '/superAdminDashboard' : user?.role === 'T' ? '/adminDashboard' : user?.role === 'H' ? '/adminDashboard' : user?.role === 'D' ? '/adminDashboard' : user?.role === 'F' ? '/adminDashboard' :   '/dashboard'}
-                  className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 hover:scale-105"
-                >
-                  Dashboard
-                </Link>
-              </>
-            )}
-            
-            
+    
             {loading ? (
               <div className="flex items-center space-x-2 text-gray-600">
                 <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
