@@ -139,6 +139,18 @@ function Login() {
         case 'C': // Customer
           navigate('/customerDashboard', { replace: true });
           break;
+        case 'T':
+          navigate('/adminDashboard', { replace: true });
+          break;
+        case 'H':
+          navigate('/adminDashboard', { replace: true });
+          break;
+        case 'D':
+          navigate('/admin/transfers', { replace: true });
+          break;
+        case 'F':
+          navigate('/adminDashboard', { replace: true });
+          break;
         default:
           // Default to customer dashboard for unknown roles
           navigate('/customerDashboard', { replace: true });

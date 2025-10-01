@@ -1,17 +1,27 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useAdmin } from '../context/AdminContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 import CustomerTab from '../components/admin/CustomerTab';
 import PackagesTab from '../components/admin/PackagesTab';
 import DeliveriesTab from '../components/admin/DeliveriesTab';
 import PackageModal from '../components/admin/PackageModal';
+import {
+  hasPermission,
+  getAvailableTabs,
+  getDefaultTab,
+  getRoleName,
+  canAccessTransfers,
+  canAccessAdminTools,
+  PERMISSIONS
+} from '../utils/rolePermissions';
 
 function AdminDashboard() {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const {
     customers,
     selectedCustomer,
@@ -24,29 +34,35 @@ function AdminDashboard() {
     clearError
   } = useAdmin();
 
+  // Get available tabs for current user's role
+  const availableTabs = useMemo(() => getAvailableTabs(user?.role), [user?.role]);
+  const defaultTab = useMemo(() => getDefaultTab(user?.role), [user?.role]);
 
-  const [activeTab, setActiveTab] = useState('customers');
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [selectedPreAlert, setSelectedPreAlert] = useState(null);
   const [showPackageModal, setShowPackageModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isChangingTab, setIsChangingTab] = useState(false);
 
-  // Load customers on component mount and when user changes
+  // Load customers on component mount and when user changes (if user has permission)
   useEffect(() => {
-    if (user?.role === 'A') {
+    if (user && hasPermission(user.role, PERMISSIONS.VIEW_CUSTOMERS_TAB)) {
       fetchCustomers();
     }
   }, [user]);
 
-  // Handle URL tab parameter
+  // Handle URL tab parameter with permission check
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['customers', 'packages', 'deliveries'].includes(tabParam)) {
+    if (tabParam && availableTabs.includes(tabParam)) {
       setActiveTab(tabParam);
+    } else if (tabParam && !availableTabs.includes(tabParam)) {
+      // User tried to access a tab they don't have permission for
+      setActiveTab(defaultTab);
     }
-  }, [location.search]);
+  }, [location.search, availableTabs, defaultTab]);
 
   // Clear error after 5 seconds
   useEffect(() => {
@@ -72,6 +88,12 @@ function AdminDashboard() {
   const handleTabChange = useCallback((newTab) => {
     if (isChangingTab || newTab === activeTab) return;
 
+    // Check if user has permission to access this tab
+    if (!availableTabs.includes(newTab)) {
+      console.warn(`User ${user?.email} attempted to access unauthorized tab: ${newTab}`);
+      return;
+    }
+
     setIsChangingTab(true);
 
     // Use setTimeout to prevent rapid clicks from causing issues
@@ -79,7 +101,7 @@ function AdminDashboard() {
       setActiveTab(newTab);
       setIsChangingTab(false);
     }, 50);
-  }, [activeTab, isChangingTab]);
+  }, [activeTab, isChangingTab, availableTabs, user]);
 
   const handleCustomerSelect = useCallback(async (customer) => {
     if (!customer) return;
@@ -174,12 +196,19 @@ function AdminDashboard() {
             handleConfirmPreAlert={handleConfirmPreAlert}
             getStatusBadge={getStatusBadge}
             formatDate={formatDate}
+            userRole={user?.role}
+            canConfirmPreAlert={hasPermission(user?.role, PERMISSIONS.CONFIRM_PREALERT)}
           />
         );
       case 'packages':
-        return <PackagesTab />;
+        return (
+          <PackagesTab
+            userRole={user?.role}
+            canChangeStatus={hasPermission(user?.role, PERMISSIONS.CHANGE_PACKAGE_STATUS)}
+          />
+        );
       case 'deliveries':
-        return <DeliveriesTab />;
+        return <DeliveriesTab userRole={user?.role} />;
       default:
         return null;
     }
@@ -191,7 +220,8 @@ function AdminDashboard() {
     searchQuery,
     handleCustomerSelect,
     handlePreAlertSelect,
-    handleConfirmPreAlert
+    handleConfirmPreAlert,
+    user?.role
   ]);
 
   if (loading && customers.length === 0) {
@@ -222,7 +252,7 @@ function AdminDashboard() {
               <div className="w-full md:w-auto">
                 <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 sm:p-4 text-center md:text-left">
                   <p className="text-sm">Welcome, {user?.first_name} {user?.last_name}</p>
-                  <p className="text-sm">Role: Administrator</p>
+                  <p className="text-sm">Role: {getRoleName(user?.role)}</p>
                 </div>
               </div>
             </div>
@@ -230,30 +260,34 @@ function AdminDashboard() {
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          {/* Mobile-Responsive Admin Tools Section */}
-          <div className="bg-white rounded-xl shadow-lg mb-6 sm:mb-8">
-            <div className="p-4 sm:p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Admin Tools</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <a
-                  href="/admin/transfers"
-                  className="bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-4 transition-all duration-300 group"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-blue-600 text-white p-2 rounded-lg group-hover:bg-blue-700 transition-colors flex-shrink-0">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 0V4a2 2 0 00-2-2H9a2 2 0 00-2 2v3m1 0h4" />
-                      </svg>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-semibold text-gray-800 text-sm sm:text-base">Transfer Management</h4>
-                      <p className="text-xs sm:text-sm text-gray-600">Manage package transfers between locations</p>
-                    </div>
-                  </div>
-                </a>
+          {/* Mobile-Responsive Admin Tools Section - Only show if user has access */}
+          {(canAccessTransfers(user?.role) || canAccessAdminTools(user?.role)) && (
+            <div className="bg-white rounded-xl shadow-lg mb-6 sm:mb-8">
+              <div className="p-4 sm:p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Access</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {canAccessTransfers(user?.role) && (
+                    <a
+                      href="/admin/transfers"
+                      className="bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-4 transition-all duration-300 group"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-blue-600 text-white p-2 rounded-lg group-hover:bg-blue-700 transition-colors flex-shrink-0">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 0V4a2 2 0 00-2-2H9a2 2 0 00-2 2v3m1 0h4" />
+                          </svg>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-semibold text-gray-800 text-sm sm:text-base">Transfer Management</h4>
+                          <p className="text-xs sm:text-sm text-gray-600">Manage package transfers between locations</p>
+                        </div>
+                      </div>
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Success Alert */}
           {successMessage && (
@@ -288,95 +322,107 @@ function AdminDashboard() {
             {/* Mobile Tab Navigation - Button Style for Better Performance */}
             <div className="sm:hidden border-b border-gray-200">
               <div className="flex">
-                <button
-                  onClick={() => handleTabChange('customers')}
-                  disabled={isChangingTab}
-                  className={`flex-1 px-3 py-3 font-semibold text-sm transition-colors duration-200 disabled:opacity-50 ${
-                    activeTab === 'customers'
-                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                      : 'text-gray-600 hover:text-blue-600'
-                  }`}
-                >
-                  <span className="flex flex-col items-center space-y-1">
-                    <span>👥</span>
-                    <span className="text-xs">Customers</span>
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleTabChange('packages')}
-                  disabled={isChangingTab}
-                  className={`flex-1 px-3 py-3 font-semibold text-sm transition-colors duration-200 disabled:opacity-50 ${
-                    activeTab === 'packages'
-                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                      : 'text-gray-600 hover:text-blue-600'
-                  }`}
-                >
-                  <span className="flex flex-col items-center space-y-1">
-                    <span>📦</span>
-                    <span className="text-xs">Packages</span>
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleTabChange('deliveries')}
-                  disabled={isChangingTab}
-                  className={`flex-1 px-3 py-3 font-semibold text-sm transition-colors duration-200 disabled:opacity-50 ${
-                    activeTab === 'deliveries'
-                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                      : 'text-gray-600 hover:text-blue-600'
-                  }`}
-                >
-                  <span className="flex flex-col items-center space-y-1">
-                    <span>🚚</span>
-                    <span className="text-xs">Deliveries</span>
-                  </span>
-                </button>
+                {availableTabs.includes('customers') && (
+                  <button
+                    onClick={() => handleTabChange('customers')}
+                    disabled={isChangingTab}
+                    className={`flex-1 px-3 py-3 font-semibold text-sm transition-colors duration-200 disabled:opacity-50 ${
+                      activeTab === 'customers'
+                        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                        : 'text-gray-600 hover:text-blue-600'
+                    }`}
+                  >
+                    <span className="flex flex-col items-center space-y-1">
+                      <span>👥</span>
+                      <span className="text-xs">Customers</span>
+                    </span>
+                  </button>
+                )}
+                {availableTabs.includes('packages') && (
+                  <button
+                    onClick={() => handleTabChange('packages')}
+                    disabled={isChangingTab}
+                    className={`flex-1 px-3 py-3 font-semibold text-sm transition-colors duration-200 disabled:opacity-50 ${
+                      activeTab === 'packages'
+                        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                        : 'text-gray-600 hover:text-blue-600'
+                    }`}
+                  >
+                    <span className="flex flex-col items-center space-y-1">
+                      <span>📦</span>
+                      <span className="text-xs">Packages</span>
+                    </span>
+                  </button>
+                )}
+                {availableTabs.includes('deliveries') && (
+                  <button
+                    onClick={() => handleTabChange('deliveries')}
+                    disabled={isChangingTab}
+                    className={`flex-1 px-3 py-3 font-semibold text-sm transition-colors duration-200 disabled:opacity-50 ${
+                      activeTab === 'deliveries'
+                        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                        : 'text-gray-600 hover:text-blue-600'
+                    }`}
+                  >
+                    <span className="flex flex-col items-center space-y-1">
+                      <span>🚚</span>
+                      <span className="text-xs">Deliveries</span>
+                    </span>
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Desktop Tab Navigation */}
             <div className="hidden sm:flex border-b border-gray-200">
-              <button
-                onClick={() => handleTabChange('customers')}
-                disabled={isChangingTab}
-                className={`px-6 py-4 font-semibold transition-colors duration-200 disabled:opacity-50 ${
-                  activeTab === 'customers'
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                    : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
-                }`}
-              >
-                <span className="flex items-center space-x-2">
-                  <span>👥</span>
-                  <span>Customers</span>
-                </span>
-              </button>
-              <button
-                onClick={() => handleTabChange('packages')}
-                disabled={isChangingTab}
-                className={`px-6 py-4 font-semibold transition-colors duration-200 disabled:opacity-50 ${
-                  activeTab === 'packages'
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                    : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
-                }`}
-              >
-                <span className="flex items-center space-x-2">
-                  <span>📦</span>
-                  <span>Packages</span>
-                </span>
-              </button>
-              <button
-                onClick={() => handleTabChange('deliveries')}
-                disabled={isChangingTab}
-                className={`px-6 py-4 font-semibold transition-colors duration-200 disabled:opacity-50 ${
-                  activeTab === 'deliveries'
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                    : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
-                }`}
-              >
-                <span className="flex items-center space-x-2">
-                  <span>🚚</span>
-                  <span>Deliveries</span>
-                </span>
-              </button>
+              {availableTabs.includes('customers') && (
+                <button
+                  onClick={() => handleTabChange('customers')}
+                  disabled={isChangingTab}
+                  className={`px-6 py-4 font-semibold transition-colors duration-200 disabled:opacity-50 ${
+                    activeTab === 'customers'
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="flex items-center space-x-2">
+                    <span>👥</span>
+                    <span>Customers</span>
+                  </span>
+                </button>
+              )}
+              {availableTabs.includes('packages') && (
+                <button
+                  onClick={() => handleTabChange('packages')}
+                  disabled={isChangingTab}
+                  className={`px-6 py-4 font-semibold transition-colors duration-200 disabled:opacity-50 ${
+                    activeTab === 'packages'
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="flex items-center space-x-2">
+                    <span>📦</span>
+                    <span>Packages</span>
+                  </span>
+                </button>
+              )}
+              {availableTabs.includes('deliveries') && (
+                <button
+                  onClick={() => handleTabChange('deliveries')}
+                  disabled={isChangingTab}
+                  className={`px-6 py-4 font-semibold transition-colors duration-200 disabled:opacity-50 ${
+                    activeTab === 'deliveries'
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="flex items-center space-x-2">
+                    <span>🚚</span>
+                    <span>Deliveries</span>
+                  </span>
+                </button>
+              )}
             </div>
 
             <div className="p-4 sm:p-6">

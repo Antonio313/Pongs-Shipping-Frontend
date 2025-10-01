@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { preAlertsAPI, packagesAPI } from '../../services/api';
 
-function CustomerTab({ 
-  customers, 
-  selectedCustomer, 
-  customerPreAlerts, 
-  searchQuery, 
-  setSearchQuery, 
-  handleCustomerSelect, 
-  handlePreAlertSelect, 
-  handleConfirmPreAlert, 
-  getStatusBadge, 
-  formatDate 
+function CustomerTab({
+  customers,
+  selectedCustomer,
+  customerPreAlerts,
+  searchQuery,
+  setSearchQuery,
+  handleCustomerSelect,
+  handlePreAlertSelect,
+  handleConfirmPreAlert,
+  getStatusBadge,
+  formatDate,
+  userRole,
+  canConfirmPreAlert
 }) {
   const [selectedPreAlert, setSelectedPreAlert] = useState(null);
   const [showPreAlertModal, setShowPreAlertModal] = useState(false);
@@ -270,7 +272,7 @@ function CustomerTab({
                             </td>
                             <td className="px-4 py-3">{formatDate(alert.created_at)}</td>
                             <td className="px-4 py-3">
-                              {alert.status === 'U' && (
+                              {alert.status === 'U' && canConfirmPreAlert && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -362,7 +364,7 @@ function CustomerTab({
 
                       {/* Action Buttons */}
                       <div className="flex gap-2 pt-2 border-t border-gray-100">
-                        {alert.status === 'U' && (
+                        {alert.status === 'U' && canConfirmPreAlert && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -381,7 +383,7 @@ function CustomerTab({
                             e.stopPropagation();
                             handleInternalPreAlertSelect(alert);
                           }}
-                          className={`${alert.status === 'U' ? 'flex-1' : 'w-full'} bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2`}
+                          className={`${(alert.status === 'U' && canConfirmPreAlert) ? 'flex-1' : 'w-full'} bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2`}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

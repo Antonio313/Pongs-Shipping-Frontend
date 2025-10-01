@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { adminAPI } from '../services/api';
 import { useAuth } from './AuthContext';
+import { isStaffRole, hasPermission, PERMISSIONS } from '../utils/rolePermissions';
 
 const AdminContext = createContext();
 
@@ -20,9 +21,9 @@ export const AdminProvider = ({ children }) => {
   const [error, setError] = useState('');
   const { user } = useAuth();
 
-  // Clear customers when user logs out or changes to non-admin
+  // Clear customers when user logs out or changes to non-staff
   useEffect(() => {
-    if (!user || user.role !== 'A') {
+    if (!user || !isStaffRole(user.role)) {
       setCustomers([]);
       setSelectedCustomer(null);
       setCustomerPreAlerts([]);
@@ -30,9 +31,9 @@ export const AdminProvider = ({ children }) => {
   }, [user]);
 
   const fetchCustomers = async () => {
-    if (user?.role !== 'A') {
-      setError('Access denied. Admin only.');
-      return { success: false, error: 'Access denied. Admin only.' };
+    if (!hasPermission(user?.role, PERMISSIONS.VIEW_CUSTOMERS_TAB)) {
+      setError('Access denied. Insufficient permissions.');
+      return { success: false, error: 'Access denied. Insufficient permissions.' };
     }
 
     try {
@@ -52,9 +53,9 @@ export const AdminProvider = ({ children }) => {
   };
 
   const fetchCustomerDetails = async (customerId) => {
-    if (user?.role !== 'A') {
-      setError('Access denied. Admin only.');
-      return { success: false, error: 'Access denied. Admin only.' };
+    if (!hasPermission(user?.role, PERMISSIONS.VIEW_CUSTOMER_DETAILS)) {
+      setError('Access denied. Insufficient permissions.');
+      return { success: false, error: 'Access denied. Insufficient permissions.' };
     }
 
     try {

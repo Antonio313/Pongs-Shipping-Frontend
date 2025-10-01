@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import Header from '../../src/Header';
 import Footer from '../../src/Footer';
 import { superAdminAPI } from '../../services/api';
+import { ROLES, ROLE_NAMES } from '../../utils/rolePermissions';
 
 function SuperAdminDashboard() {
   const { user } = useAuth();
@@ -621,20 +622,57 @@ function SuperAdminDashboard() {
 // Management Section Component
 function ManagementSection({ onUpdate }) {
   const [staffList, setStaffList] = useState([]);
+  const [filteredStaffList, setFilteredStaffList] = useState([]);
   const [showAddStaffModal, setShowAddStaffModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [branchFilter, setBranchFilter] = useState('all');
 
   useEffect(() => {
     loadStaff();
   }, []);
 
+  useEffect(() => {
+    filterStaff();
+  }, [staffList, searchTerm, roleFilter, branchFilter]);
+
   const loadStaff = async () => {
     try {
       const response = await superAdminAPI.getAllStaff();
-      setStaffList(response.data);
+      // Filter out customers from the staff list
+      const staffOnly = response.data.filter(staff => staff.role !== ROLES.CUSTOMER);
+      setStaffList(staffOnly);
     } catch (error) {
       console.error('Error loading staff:', error);
     }
+  };
+
+  const filterStaff = () => {
+    let filtered = [...staffList];
+
+    // Search filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(staff =>
+        staff.first_name.toLowerCase().includes(searchLower) ||
+        staff.last_name.toLowerCase().includes(searchLower) ||
+        staff.email.toLowerCase().includes(searchLower) ||
+        staff.phone?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Role filter
+    if (roleFilter !== 'all') {
+      filtered = filtered.filter(staff => staff.role === roleFilter);
+    }
+
+    // Branch filter
+    if (branchFilter !== 'all') {
+      filtered = filtered.filter(staff => staff.branch === branchFilter);
+    }
+
+    setFilteredStaffList(filtered);
   };
 
   const handleDeleteStaff = async (staffId, staffName) => {
@@ -665,6 +703,62 @@ function ManagementSection({ onUpdate }) {
         </button>
       </div>
 
+      {/* Search and Filter Controls */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Search Input */}
+          <div className="sm:col-span-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+            <input
+              type="text"
+              placeholder="Search by name, email, or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+            />
+          </div>
+
+          {/* Role Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Role</label>
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+            >
+              <option value="all">All Roles</option>
+              <option value={ROLES.SUPER_ADMIN}>{ROLE_NAMES[ROLES.SUPER_ADMIN]}</option>
+              <option value={ROLES.ADMIN}>{ROLE_NAMES[ROLES.ADMIN]}</option>
+              <option value={ROLES.CASHIER}>{ROLE_NAMES[ROLES.CASHIER]}</option>
+              <option value={ROLES.PACKAGE_HANDLER}>{ROLE_NAMES[ROLES.PACKAGE_HANDLER]}</option>
+              <option value={ROLES.TRANSFER_PERSONNEL}>{ROLE_NAMES[ROLES.TRANSFER_PERSONNEL]}</option>
+              <option value={ROLES.FRONT_DESK}>{ROLE_NAMES[ROLES.FRONT_DESK]}</option>
+            </select>
+          </div>
+
+          {/* Branch Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Branch</label>
+            <select
+              value={branchFilter}
+              onChange={(e) => setBranchFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+            >
+              <option value="all">All Branches</option>
+              <option value="Priory">Priory</option>
+              <option value="Spanish Town">Spanish Town</option>
+              <option value="May Pen">May Pen</option>
+              <option value="Portmore">Portmore</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Results Count */}
+        <div className="mt-3 text-sm text-gray-600">
+          Showing {filteredStaffList.length} of {staffList.length} staff members
+        </div>
+      </div>
+
       {/* Mobile-Responsive Staff List */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto -mx-2 sm:mx-0">
@@ -680,7 +774,16 @@ function ManagementSection({ onUpdate }) {
               </tr>
             </thead>
             <tbody>
-              {staffList.map(staff => (
+              {filteredStaffList.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
+                    {searchTerm || roleFilter !== 'all' || branchFilter !== 'all'
+                      ? 'No staff members match your filters'
+                      : 'No staff members found'}
+                  </td>
+                </tr>
+              ) : (
+                filteredStaffList.map(staff => (
                 <tr key={staff.user_id} className="border-b border-gray-100">
                   <td className="px-2 sm:px-4 py-3">
                     <div>
@@ -693,11 +796,23 @@ function ManagementSection({ onUpdate }) {
                   <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm">{staff.branch}</td>
                   <td className="px-2 sm:px-4 py-3">
                     <span className={`px-1 sm:px-2 py-1 rounded-full text-xs font-medium ${
-                      staff.role === 'S'
+                      staff.role === ROLES.SUPER_ADMIN
                         ? 'bg-purple-100 text-purple-800'
-                        : 'bg-blue-100 text-blue-800'
+                        : staff.role === ROLES.ADMIN
+                        ? 'bg-blue-100 text-blue-800'
+                        : staff.role === ROLES.CASHIER
+                        ? 'bg-green-100 text-green-800'
+                        : staff.role === ROLES.PACKAGE_HANDLER
+                        ? 'bg-orange-100 text-orange-800'
+                        : staff.role === ROLES.TRANSFER_PERSONNEL
+                        ? 'bg-indigo-100 text-indigo-800'
+                        : staff.role === ROLES.FRONT_DESK
+                        ? 'bg-teal-100 text-teal-800'
+                        : staff.role === ROLES.CUSTOMER
+                        ? 'bg-gray-100 text-gray-800'
+                        : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {staff.role === 'S' ? 'Super' : 'Admin'}
+                      {ROLE_NAMES[staff.role] || staff.role}
                     </span>
                   </td>
                   <td className="px-2 sm:px-4 py-3">
@@ -718,7 +833,7 @@ function ManagementSection({ onUpdate }) {
                     </button>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>
@@ -749,7 +864,7 @@ function AddStaffModal({ onClose, onSuccess }) {
     phone: '',
     address: '',
     branch: 'Priory',
-    role: 'A'
+    role: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -853,8 +968,14 @@ function AddStaffModal({ onClose, onSuccess }) {
                 onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               >
-                <option value="A">Admin</option>
-                <option value="S">Super Admin</option>
+                <option value="">Select a role...</option>
+                <option value={ROLES.SUPER_ADMIN}>{ROLE_NAMES[ROLES.SUPER_ADMIN]}</option>
+                <option value={ROLES.ADMIN}>{ROLE_NAMES[ROLES.ADMIN]}</option>
+                <option value={ROLES.CASHIER}>{ROLE_NAMES[ROLES.CASHIER]}</option>
+                <option value={ROLES.PACKAGE_HANDLER}>{ROLE_NAMES[ROLES.PACKAGE_HANDLER]}</option>
+                <option value={ROLES.TRANSFER_PERSONNEL}>{ROLE_NAMES[ROLES.TRANSFER_PERSONNEL]}</option>
+                <option value={ROLES.FRONT_DESK}>{ROLE_NAMES[ROLES.FRONT_DESK]}</option>
+                <option value={ROLES.CUSTOMER}>{ROLE_NAMES[ROLES.CUSTOMER]}</option>
               </select>
             </div>
           </div>

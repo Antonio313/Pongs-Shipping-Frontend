@@ -110,7 +110,7 @@ function TransfersPage() {
               <div className="mt-4 md:mt-0">
                 <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4">
                   <p className="text-sm">Welcome, {user?.first_name} {user?.last_name}</p>
-                  <p className="text-sm">Role: Administrator</p>
+                  <p className="text-sm">Role: Transfer Personnel</p>
                 </div>
               </div>
             </div>

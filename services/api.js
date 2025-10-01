@@ -4,11 +4,11 @@ import axios from 'axios';
 const getApiBaseUrl = () => {
   // In production, use environment variable if set, otherwise use Railway backend URL
   if (import.meta.env.PROD || import.meta.env.MODE === 'production') {
-    return import.meta.env.VITE_API_URL || 'https://pongs-shipping-backend-production.up.railway.app/api';
+    return import.meta.env.VITE_API_URL || 'https://api.pongsshipping.com/api';
   }
 
-  // In development, use proxy path (Vite will forward /api to localhost:3000)
-  return import.meta.env.VITE_API_URL || '/api';
+  // In development, try environment variable first, then fallback
+  return import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -155,15 +155,6 @@ export const adminAPI = {
 
   // Get specific customers with their pre-alerts (admin only)
   getCustomerDetails: (customerId) => api.get(`/admin/customers/${customerId}`),
-
-  // Get admin profile statistics
-  getProfileStats: () => api.get('/admin/profile/stats'),
-
-  // Update admin profile
-  updateProfile: (data) => api.put('/admin/profile', data),
-
-  // Change admin password
-  changePassword: (data) => api.put('/admin/profile/password', data),
 }
 
 // Transfers API calls
