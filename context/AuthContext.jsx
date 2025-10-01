@@ -79,14 +79,19 @@ export const AuthProvider = ({ children }) => {
       });
 
       const { user: newUser, token, requires_verification } = response.data;
-      
-      // Store token and user data even if verification is required
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(newUser));
-      setUser(newUser);
-      
-      return { 
-        success: true, 
+
+      // Only store token and log in user if verification is NOT required
+      if (!requires_verification) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(newUser));
+        localStorage.setItem('loginTime', Date.now().toString());
+        setUser(newUser);
+      }
+      // If verification is required, do NOT log them in
+      // They will be logged in after email verification
+
+      return {
+        success: true,
         data: response.data,
         requiresVerification: requires_verification || false
       };

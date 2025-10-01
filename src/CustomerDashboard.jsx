@@ -386,7 +386,7 @@ function CustomerDashboard() {
               </div>
               <div className="bg-gradient-to-r from-green-50 to-green-100 p-3 rounded-lg border border-green-200">
                 <h3 className="text-xs sm:text-sm font-medium text-green-700 mb-1">Complete Address</h3>
-                <p className="text-green-800 font-medium text-sm sm:text-base break-words">{addressInfo.formatted || user?.address}, Lauderdale Lakes, Florida, 33309</p>
+                <p className="text-green-800 font-medium text-sm sm:text-base break-words">{addressInfo.formatted || user?.address}</p>
               </div>
             </div>
 
