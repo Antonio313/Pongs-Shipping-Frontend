@@ -6,14 +6,7 @@ import Footer from '../../src/Footer';
 
 function AdminProfile() {
   const { user } = useAuth();
-  const [stats, setStats] = useState({
-    deliveries_count: 0,
-    total_amount_handled: 0,
-    packages_processed: 0,
-    customers_served: 0,
-    total_packages_handled: 0,
-    last_delivery: null
-  });
+  const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -23,23 +16,21 @@ function AdminProfile() {
 
   const fetchAdminStats = async () => {
     try {
+      console.log('🔍 Fetching profile stats...');
       const response = await adminAPI.getProfileStats();
-
-      // Defensive check: ensure stats object exists with all required fields
+      console.log('📥 Full API Response:', response);
+      console.log('📊 Response Data:', response.data);
       const receivedStats = response.data?.stats || {};
-
-      console.log('📊 Admin Stats Response:', receivedStats); // Debug log
-
-      setStats({
-        deliveries_count: receivedStats.deliveries_count || 0,
-        total_amount_handled: receivedStats.total_amount_handled || 0,
-        packages_processed: receivedStats.packages_processed || 0,
-        customers_served: receivedStats.customers_served || 0,
-        total_packages_handled: receivedStats.total_packages_handled || receivedStats.packages_processed || 0,
-        last_delivery: receivedStats.last_delivery || null
-      });
+      console.log('✅ Extracted Stats:', receivedStats);
+      console.log('🔢 Stats Keys:', Object.keys(receivedStats));
+      console.log('📦 Deliveries:', receivedStats.deliveries_processed);
+      console.log('💰 Revenue:', receivedStats.total_revenue_collected);
+      console.log('📋 Packages Created:', receivedStats.packages_created);
+      console.log('✔️ PreAlerts:', receivedStats.prealerts_confirmed);
+      console.log('🚚 Transfers:', receivedStats.transfers_created);
+      setStats(receivedStats);
     } catch (error) {
-      console.error('❌ Error fetching admin stats:', error);
+      console.error('❌ Error fetching staff stats:', error);
       console.error('Error details:', error.response?.data || error.message);
       setError('Failed to load profile statistics');
     } finally {
@@ -86,24 +77,38 @@ function AdminProfile() {
     );
   }
 
+  // Helper function to get role-specific color scheme
+  const getRoleColors = () => {
+    switch (user?.role) {
+      case 'T': return { from: 'from-blue-600', to: 'to-blue-800', light: 'blue-100' };
+      case 'H': return { from: 'from-purple-600', to: 'to-purple-800', light: 'purple-100' };
+      case 'D': return { from: 'from-orange-600', to: 'to-orange-800', light: 'orange-100' };
+      case 'F': return { from: 'from-pink-600', to: 'to-pink-800', light: 'pink-100' };
+      default: return { from: 'from-green-600', to: 'to-green-800', light: 'green-100' };
+    }
+  };
+
+  const colors = getRoleColors();
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
 
       <main className="flex-grow">
         {/* Hero Section */}
-        <div className="bg-gradient-to-r from-green-600 to-green-800 text-white py-12">
+        <div className={`bg-gradient-to-r ${colors.from} ${colors.to} text-white py-12`}>
           <div className="container mx-auto px-6">
             <div className="flex items-center space-x-6">
               <div className="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-3xl font-bold backdrop-blur-sm">
-                {user?.first_name?.[0]?.toUpperCase() || 'A'}
+                {stats?.first_name?.[0]?.toUpperCase() || user?.first_name?.[0]?.toUpperCase() || 'S'}
               </div>
               <div>
                 <h1 className="text-4xl font-bold mb-2">
-                  {user?.first_name} {user?.last_name}
+                  {stats?.first_name || user?.first_name} {stats?.last_name || user?.last_name}
                 </h1>
-                <p className="text-xl text-green-100 mb-1">Administrator</p>
-                <p className="text-green-200 text-sm">Member since {formatDate(user?.created_at)}</p>
+                <p className="text-xl opacity-90 mb-1">{stats?.role_display || 'Staff Member'}</p>
+                <p className="text-sm opacity-75">{stats?.primary_focus || 'General Tasks'}</p>
+                <p className="text-sm opacity-75 mt-1">Member since {formatDate(stats?.join_date || user?.created_at)}</p>
               </div>
             </div>
           </div>
@@ -116,64 +121,451 @@ function AdminProfile() {
             </div>
           )}
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-6-7.15" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Deliveries Made</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.deliveries_count}</p>
+          {/* Stats Grid - Role Specific */}
+          {user?.role === 'T' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-6-7.15" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Deliveries Processed</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.deliveries_processed || 0}</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Amount Handled</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.total_amount_handled)}</p>
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Revenue Collected</p>
+                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.total_revenue_collected)}</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Packages Handled</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.total_packages_handled}</p>
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Customers Served</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.customers_served || 0}</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
-                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Avg Transaction</p>
+                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.avg_transaction_value)}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Customers Served</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.customers_served}</p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">This Week</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.deliveries_this_week || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">This Month</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.deliveries_this_month || 0}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {user?.role === 'H' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Packages Created</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.packages_created || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-6-7.15" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">PreAlerts Confirmed</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.prealerts_confirmed || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Packages Updated</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.packages_updated || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Transfers Managed</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.transfers_managed || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Actions This Week</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.actions_this_week || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Actions This Month</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.actions_this_month || 0}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {user?.role === 'D' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Transfers Created</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.transfers_created || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-6-7.15" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Transfers Completed</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.transfers_completed || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Packages Transferred</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.total_packages_in_transfers || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Active Transfers</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.active_transfers || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">This Week</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.transfers_this_week || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">This Month</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.transfers_this_month || 0}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {user?.role === 'F' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Customers Assisted</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.customers_assisted || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-6-7.15" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">PreAlerts Confirmed</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.prealerts_confirmed || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Unique Customers</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.unique_customers_helped || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Actions This Week</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.actions_this_week || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Actions This Month</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.actions_this_month || 0}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {(user?.role === 'A' || user?.role === 'S') && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-6-7.15" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Deliveries Processed</p>
+                      <p className="text-2xl font-bold text-gray-900">{stats.deliveries_processed || 0}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Revenue Collected</p>
+                      <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.total_revenue_collected)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Packages Delivered</p>
+                      <p className="text-2xl font-bold text-gray-900">{stats.packages_delivered || 0}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Customers Served</p>
+                      <p className="text-2xl font-bold text-gray-900">{stats.customers_served || 0}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Admin Actions */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Packages Created</p>
+                      <p className="text-2xl font-bold text-gray-900">{stats.packages_created || 0}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">PreAlerts Confirmed</p>
+                      <p className="text-2xl font-bold text-gray-900">{stats.prealerts_confirmed || 0}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Transfers Created</p>
+                      <p className="text-2xl font-bold text-gray-900">{stats.transfers_created || 0}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Profile Information */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -189,12 +581,12 @@ function AdminProfile() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">Full Name</label>
-                  <p className="text-gray-900 font-medium">{user?.first_name} {user?.last_name}</p>
+                  <p className="text-gray-900 font-medium">{stats?.first_name || user?.first_name} {stats?.last_name || user?.last_name}</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">Email Address</label>
-                  <p className="text-gray-900">{user?.email}</p>
+                  <p className="text-gray-900">{stats?.email || user?.email}</p>
                 </div>
 
                 <div>
@@ -204,19 +596,30 @@ function AdminProfile() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">Branch</label>
-                  <p className="text-gray-900">{user?.branch}</p>
+                  <p className="text-gray-900">{stats?.branch || user?.branch}</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">Role</label>
-                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                    Administrator
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    user?.role === 'T' ? 'bg-blue-100 text-blue-800' :
+                    user?.role === 'H' ? 'bg-purple-100 text-purple-800' :
+                    user?.role === 'D' ? 'bg-orange-100 text-orange-800' :
+                    user?.role === 'F' ? 'bg-pink-100 text-pink-800' :
+                    'bg-green-100 text-green-800'
+                  }`}>
+                    {stats?.role_display || 'Staff Member'}
                   </span>
                 </div>
 
                 <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Primary Focus</label>
+                  <p className="text-gray-900">{stats?.primary_focus || 'General Tasks'}</p>
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">Account Created</label>
-                  <p className="text-gray-900">{formatDate(user?.created_at)}</p>
+                  <p className="text-gray-900">{formatDate(stats?.join_date || user?.created_at)}</p>
                 </div>
 
                 <div>
@@ -238,18 +641,23 @@ function AdminProfile() {
                 <svg className="w-6 h-6 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Recent Activity
+                Activity Summary
               </h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">Last Delivery</label>
-                  <p className="text-gray-900 font-medium">{formatDateTime(stats.last_delivery)}</p>
+                  <label className="block text-sm font-medium text-gray-600 mb-2">Total Actions</label>
+                  <p className="text-gray-900 font-medium text-2xl">{stats.total_actions || 0}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">Total Packages Handled</label>
-                  <p className="text-gray-900 font-medium">{stats.total_packages_handled}</p>
+                  <label className="block text-sm font-medium text-gray-600 mb-2">Total Revenue Impact</label>
+                  <p className="text-gray-900 font-medium text-2xl">{formatCurrency(stats.total_revenue_generated)}</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-2">Last Action</label>
+                  <p className="text-gray-900 font-medium">{formatDateTime(stats.last_action_date)}</p>
                 </div>
               </div>
             </div>

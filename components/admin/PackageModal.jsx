@@ -15,6 +15,7 @@ function PackageModal({ preAlert, onClose, onSubmit }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [createdPackage, setCreatedPackage] = useState(null);
+  const [customerData, setCustomerData] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,8 +45,9 @@ function PackageModal({ preAlert, onClose, onSubmit }) {
       // Call API to create package from pre-alert
       const response = await packagesAPI.createPackageFromPreAlert(preAlert.prealert_id, packageData);
 
-      // Store the created package data and show success popup
+      // Store the created package data and customer data
       setCreatedPackage(response.data.package);
+      setCustomerData(response.data.customer);
       setShowSuccessPopup(true);
       
     } catch (error) {
@@ -73,6 +75,19 @@ function PackageModal({ preAlert, onClose, onSubmit }) {
     // Clear field-specific errors when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (createdPackage && customerData) {
+      try {
+        // Lazy load the PDF generator only when needed
+        const { generatePackageLabelPDF } = await import('../../utils/pdfGenerator');
+        generatePackageLabelPDF(createdPackage, customerData);
+      } catch (error) {
+        console.error('Error loading PDF generator:', error);
+        alert('Failed to generate PDF. Please try again.');
+      }
     }
   };
 
@@ -293,15 +308,29 @@ function PackageModal({ preAlert, onClose, onSubmit }) {
               <div className="text-sm text-gray-600 mb-6">
                 <p><strong>Package ID:</strong> {createdPackage.package_id}</p>
                 <p><strong>Status:</strong> {createdPackage.status}</p>
-                <p><strong>Customer:</strong> {preAlert.customer_name || `Customer ID: ${preAlert.user_id}`}</p>
+                {customerData && (
+                  <p><strong>Customer:</strong> {customerData.first_name} {customerData.last_name}</p>
+                )}
               </div>
 
-              <button
-                onClick={handleSuccessClose}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
-              >
-                Continue
-              </button>
+              <div className="space-y-3">
+                <button
+                  onClick={handleDownloadPDF}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                  </svg>
+                  Download Package Label (PDF)
+                </button>
+
+                <button
+                  onClick={handleSuccessClose}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+                >
+                  Continue
+                </button>
+              </div>
             </div>
           </div>
         </div>

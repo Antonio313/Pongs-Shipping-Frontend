@@ -155,6 +155,15 @@ export const adminAPI = {
 
   // Get specific customers with their pre-alerts (admin only)
   getCustomerDetails: (customerId) => api.get(`/admin/customers/${customerId}`),
+
+  // Get admin profile statistics
+  getProfileStats: () => api.get('/admin/profile/stats'),
+
+  // Update admin profile
+  updateProfile: (data) => api.put('/admin/profile', data),
+
+  // Change admin password
+  changePassword: (data) => api.put('/admin/profile/password', data),
 }
 
 // Transfers API calls
@@ -176,6 +185,15 @@ export const transfersAPI = {
 
   // Update package checkoff status in transfer
   updatePackageCheckoff: (transferId, packageId, data) => api.patch(`/transfers/${transferId}/packages/${packageId}/checkoff`, data),
+
+  // Add packages to transfer
+  addPackagesToTransfer: (transferId, data) => api.post(`/transfers/${transferId}/packages`, data),
+
+  // Remove package from transfer
+  removePackageFromTransfer: (transferId, packageId) => api.delete(`/transfers/${transferId}/packages/${packageId}`),
+
+  // Update transfer details (destination, notes)
+  updateTransfer: (id, data) => api.patch(`/transfers/${id}`, data),
 
   // Delete transfer (admin only)
   deleteTransfer: (id) => api.delete(`/transfers/${id}`),

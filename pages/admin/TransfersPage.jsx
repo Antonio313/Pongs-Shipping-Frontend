@@ -12,6 +12,7 @@ function TransfersPage() {
   const [selectedTransferList, setSelectedTransferList] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [destinationFilter, setDestinationFilter] = useState('all');
 
@@ -22,10 +23,14 @@ function TransfersPage() {
 
   const loadTransferLists = async () => {
     try {
+      console.log('🔄 Loading transfer lists...');
       const response = await transfersAPI.getAllTransfers();
+      console.log('📦 Transfer lists response:', response);
+      console.log('📦 Transfer lists data:', response.data);
       setTransferLists(response.data);
     } catch (error) {
-      console.error('Error loading transfer lists:', error);
+      console.error('❌ Error loading transfer lists:', error);
+      console.error('Error details:', error.response?.data || error.message);
     }
   };
 
@@ -80,6 +85,11 @@ function TransfersPage() {
   const handleViewTransfer = (transferList) => {
     setSelectedTransferList(transferList);
     setShowViewModal(true);
+  };
+
+  const handleEditTransfer = (transferList) => {
+    setSelectedTransferList(transferList);
+    setShowEditModal(true);
   };
 
   if (loading && transferLists.length === 0) {
@@ -236,7 +246,7 @@ function TransfersPage() {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    // Handle edit functionality
+                                    handleEditTransfer(transferList);
                                   }}
                                   className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1 rounded transition-all duration-300"
                                 >
@@ -267,6 +277,20 @@ function TransfersPage() {
           onSuccess={() => {
             setShowCreateModal(false);
             loadTransferLists();
+          }}
+        />
+      )}
+
+      {/* Edit Transfer Modal */}
+      {showEditModal && selectedTransferList && (
+        <EditTransferModal
+          transferList={selectedTransferList}
+          packages={allPackages}
+          locations={locations}
+          onClose={() => setShowEditModal(false)}
+          onSuccess={() => {
+            loadTransferLists();
+            setShowEditModal(false);
           }}
         />
       )}
@@ -543,6 +567,332 @@ function CreateTransferModal({ packages, locations, onClose, onSuccess }) {
   );
 }
 
+// Edit Transfer Modal Component
+function EditTransferModal({ transferList, packages, locations, onClose, onSuccess }) {
+  const [currentPackages, setCurrentPackages] = useState([]);
+  const [availablePackages, setAvailablePackages] = useState([]);
+  const [selectedToAdd, setSelectedToAdd] = useState([]);
+  const [destination, setDestination] = useState(transferList.destination);
+  const [notes, setNotes] = useState(transferList.notes || '');
+  const [loading, setLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    loadTransferPackages();
+  }, []);
+
+  const loadTransferPackages = async () => {
+    try {
+      const response = await transfersAPI.getTransferPackages(transferList.transfer_id);
+      setCurrentPackages(response.data.packages || []);
+
+      // Filter available packages (eligible statuses not already in transfer)
+      const currentPackageIds = response.data.packages.map(p => p.package_id);
+      const eligible = packages.filter(pkg =>
+        (pkg.status === 'In Transit to Jamaica' || pkg.status === 'In Transit to Selected Branch') &&
+        !currentPackageIds.includes(pkg.package_id)
+      );
+      setAvailablePackages(eligible);
+    } catch (error) {
+      console.error('Error loading transfer packages:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemovePackage = async (packageId) => {
+    if (!window.confirm('Remove this package from the transfer list?')) return;
+
+    try {
+      await transfersAPI.removePackageFromTransfer(transferList.transfer_id, packageId);
+
+      // Move package from current to available
+      const removedPkg = currentPackages.find(p => p.package_id === packageId);
+      if (removedPkg) {
+        setCurrentPackages(prev => prev.filter(p => p.package_id !== packageId));
+        setAvailablePackages(prev => [...prev, removedPkg]);
+      }
+    } catch (error) {
+      console.error('Error removing package:', error);
+      alert('Failed to remove package. Please try again.');
+    }
+  };
+
+  const handleAddPackages = async () => {
+    if (selectedToAdd.length === 0) {
+      alert('Please select at least one package to add');
+      return;
+    }
+
+    try {
+      await transfersAPI.addPackagesToTransfer(transferList.transfer_id, { packages: selectedToAdd });
+
+      // Move packages from available to current
+      const addedPackages = availablePackages.filter(p => selectedToAdd.includes(p.package_id));
+      setCurrentPackages(prev => [...prev, ...addedPackages]);
+      setAvailablePackages(prev => prev.filter(p => !selectedToAdd.includes(p.package_id)));
+      setSelectedToAdd([]);
+    } catch (error) {
+      console.error('Error adding packages:', error);
+      alert('Failed to add packages. Please try again.');
+    }
+  };
+
+  const handleUpdateTransfer = async () => {
+    setIsUpdating(true);
+    try {
+      await transfersAPI.updateTransfer(transferList.transfer_id, {
+        destination,
+        notes
+      });
+      onSuccess();
+    } catch (error) {
+      console.error('Error updating transfer:', error);
+      alert('Failed to update transfer. Please try again.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const filteredAvailable = availablePackages.filter(pkg =>
+    pkg.tracking_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    pkg.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (pkg.first_name && `${pkg.first_name} ${pkg.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4 p-6 border-b">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800">Edit Transfer List TL-{transferList.transfer_id}</h2>
+            <p className="text-sm text-gray-600">Manage packages and transfer details</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors duration-300"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Transfer Details */}
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h3 className="text-lg font-medium text-gray-800 mb-4">Transfer Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Destination <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {locations.map(location => (
+                    <option key={location.value} value={location.value}>{location.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Optional transfer notes..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                />
+              </div>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <>
+              {/* Current Packages */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-800 mb-4">
+                  Current Packages ({currentPackages.length})
+                </h3>
+                {currentPackages.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg">
+                    <p className="text-gray-600">No packages in this transfer</p>
+                  </div>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tracking #</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentPackages.map(pkg => (
+                          <tr key={pkg.package_id} className="border-b hover:bg-gray-50">
+                            <td className="px-4 py-3 font-mono text-sm">{pkg.tracking_number}</td>
+                            <td className="px-4 py-3">
+                              {pkg.first_name && pkg.last_name ? (
+                                <span>{pkg.first_name} {pkg.last_name}</span>
+                              ) : (
+                                <span className="text-gray-400">N/A</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 max-w-xs truncate">{pkg.description}</td>
+                            <td className="px-4 py-3">
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {pkg.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <button
+                                onClick={() => handleRemovePackage(pkg.package_id)}
+                                className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1 rounded transition-all duration-300"
+                              >
+                                Remove
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Add Packages */}
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-800">
+                    Add Packages ({selectedToAdd.length} selected)
+                  </h3>
+                  <button
+                    onClick={handleAddPackages}
+                    disabled={selectedToAdd.length === 0}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-300"
+                  >
+                    Add Selected
+                  </button>
+                </div>
+
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search available packages..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
+                />
+
+                {filteredAvailable.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg">
+                    <p className="text-gray-600">No available packages to add</p>
+                  </div>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th className="px-4 py-3 text-left">
+                            <input
+                              type="checkbox"
+                              checked={selectedToAdd.length === filteredAvailable.length && filteredAvailable.length > 0}
+                              onChange={() => {
+                                if (selectedToAdd.length === filteredAvailable.length) {
+                                  setSelectedToAdd([]);
+                                } else {
+                                  setSelectedToAdd(filteredAvailable.map(p => p.package_id));
+                                }
+                              }}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tracking #</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredAvailable.map(pkg => (
+                          <tr key={pkg.package_id} className="border-b hover:bg-gray-50">
+                            <td className="px-4 py-3">
+                              <input
+                                type="checkbox"
+                                checked={selectedToAdd.includes(pkg.package_id)}
+                                onChange={() => {
+                                  setSelectedToAdd(prev =>
+                                    prev.includes(pkg.package_id)
+                                      ? prev.filter(id => id !== pkg.package_id)
+                                      : [...prev, pkg.package_id]
+                                  );
+                                }}
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                              />
+                            </td>
+                            <td className="px-4 py-3 font-mono text-sm">{pkg.tracking_number}</td>
+                            <td className="px-4 py-3">
+                              {pkg.first_name && pkg.last_name ? (
+                                <span>{pkg.first_name} {pkg.last_name}</span>
+                              ) : (
+                                <span className="text-gray-400">N/A</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 max-w-xs truncate">{pkg.description}</td>
+                            <td className="px-4 py-3">
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {pkg.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="flex justify-end space-x-3 p-6 border-t">
+          <button
+            onClick={onClose}
+            disabled={isUpdating}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-300 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleUpdateTransfer}
+            disabled={isUpdating}
+            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-300 flex items-center space-x-2"
+          >
+            {isUpdating && (
+              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            )}
+            <span>{isUpdating ? 'Saving...' : 'Save Changes'}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // View Transfer Modal Component (reuse from TransfersTab.jsx)
 function ViewTransferModal({ transferList, onClose, onUpdate, getStatusBadge, formatDate, locations }) {
   const [packages, setPackages] = useState([]);
@@ -556,18 +906,24 @@ function ViewTransferModal({ transferList, onClose, onUpdate, getStatusBadge, fo
 
   const loadTransferPackages = async () => {
     try {
+      console.log('🔄 Loading packages for transfer:', transferList.transfer_id);
       const response = await transfersAPI.getTransferPackages(transferList.transfer_id);
+      console.log('📦 Transfer packages response:', response);
       const data = response.data;
-      setPackages(data.packages);
+      console.log('📦 Transfer packages data:', data);
+      console.log('📦 Packages array:', data.packages);
+      setPackages(data.packages || []);
 
       // Initialize checkoff status
       const initialStatus = {};
-      data.packages.forEach(pkg => {
+      (data.packages || []).forEach(pkg => {
         initialStatus[pkg.package_id] = pkg.checked_off || false;
       });
       setCheckoffStatus(initialStatus);
+      console.log('✅ Checkoff status initialized:', initialStatus);
     } catch (error) {
-      console.error('Error loading transfer packages:', error);
+      console.error('❌ Error loading transfer packages:', error);
+      console.error('Error details:', error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
