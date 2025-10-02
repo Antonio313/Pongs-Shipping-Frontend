@@ -247,7 +247,6 @@ export const generatePackageLabelPDF = (packageData, customerData) => {
     // Save the PDF
     doc.save(filename);
 
-    console.log('PDF generated successfully:', filename);
     return true;
 
   } catch (error) {

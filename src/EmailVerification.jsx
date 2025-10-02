@@ -23,17 +23,14 @@ function EmailVerification() {
 
       // Prevent duplicate verification attempts
       if (hasVerified.current) {
-        console.log('Already attempted verification, skipping');
         return;
       }
-      
+
       hasVerified.current = true; // Mark as attempted
 
       try {
-        console.log('Verifying token:', token);
         const response = await authAPI.verifyEmail(token);
-        console.log('Verification response:', response.data);
-        
+
         setStatus('success');
         setMessage(response.data.message || 'Email verified successfully! You can now log in.');
         

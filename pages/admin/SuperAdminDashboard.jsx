@@ -3,8 +3,9 @@ import { useAuth } from '../../context/AuthContext';
 import { useLocation } from 'react-router-dom';
 import Header from '../../src/Header';
 import Footer from '../../src/Footer';
-import { superAdminAPI } from '../../services/api';
+import { superAdminAPI, adminAPI } from '../../services/api';
 import { ROLES, ROLE_NAMES } from '../../utils/rolePermissions';
+import jsPDF from 'jspdf';
 
 function SuperAdminDashboard() {
   const { user } = useAuth();
@@ -675,6 +676,83 @@ function ManagementSection({ onUpdate }) {
     setFilteredStaffList(filtered);
   };
 
+  const handleDownloadEmployeeStats = async (staffId, staffName) => {
+    const date = prompt(`Enter date (YYYY-MM-DD) to download statistics for ${staffName}:`, new Date().toISOString().split('T')[0]);
+
+    if (!date) return;
+
+    try {
+      const response = await adminAPI.downloadStaffDailyStats(staffId, date);
+      const data = response.data;
+
+      // Create PDF
+      const pdf = new jsPDF();
+      const margin = 20;
+      let yPos = 20;
+
+      // Header
+      pdf.setFontSize(20);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Daily Statistics Report', margin, yPos);
+      yPos += 15;
+
+      // Staff Information
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Staff Name: ${data.staff_name}`, margin, yPos);
+      yPos += 8;
+      pdf.text(`Email: ${data.staff_email}`, margin, yPos);
+      yPos += 8;
+      pdf.text(`Role: ${data.role}`, margin, yPos);
+      yPos += 8;
+      pdf.text(`Date: ${data.date}`, margin, yPos);
+      yPos += 8;
+      pdf.text(`Downloaded By: ${data.downloaded_by}`, margin, yPos);
+      yPos += 15;
+
+      // Statistics Section
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Performance Statistics', margin, yPos);
+      yPos += 10;
+
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+
+      // Display statistics based on what's available
+      const stats = data.statistics;
+      Object.entries(stats).forEach(([key, value]) => {
+        const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const displayValue = typeof value === 'number' && (key.includes('revenue') || key.includes('transaction'))
+          ? `JM$${parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          : value;
+
+        pdf.text(`${label}: ${displayValue}`, margin, yPos);
+        yPos += 7;
+
+        // Add new page if needed
+        if (yPos > 270) {
+          pdf.addPage();
+          yPos = 20;
+        }
+      });
+
+      // Footer
+      yPos += 10;
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'italic');
+      pdf.text(`Generated: ${new Date(data.generated_at).toLocaleString()}`, margin, yPos);
+
+      // Save PDF
+      pdf.save(`daily-stats-${staffName.replace(/\s+/g, '-')}-${date}.pdf`);
+
+      alert(`Statistics for ${staffName} downloaded successfully!`);
+    } catch (error) {
+      console.error('Error downloading employee stats:', error);
+      alert(error.response?.data?.message || 'Failed to download statistics. Please try again.');
+    }
+  };
+
   const handleDeleteStaff = async (staffId, staffName) => {
     if (!window.confirm(`Are you sure you want to delete ${staffName}? This action cannot be undone.`)) {
       return;
@@ -746,9 +824,7 @@ function ManagementSection({ onUpdate }) {
             >
               <option value="all">All Branches</option>
               <option value="Priory">Priory</option>
-              <option value="Spanish Town">Spanish Town</option>
-              <option value="May Pen">May Pen</option>
-              <option value="Portmore">Portmore</option>
+              <option value="Ocho Rios">Ocho Rios</option>
             </select>
           </div>
         </div>
@@ -825,12 +901,24 @@ function ManagementSection({ onUpdate }) {
                     </span>
                   </td>
                   <td className="px-2 sm:px-4 py-3">
-                    <button
-                      onClick={() => handleDeleteStaff(staff.user_id, `${staff.first_name} ${staff.last_name}`)}
-                      className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-2 sm:px-3 py-1 rounded transition-all duration-300"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
+                      <button
+                        onClick={() => handleDownloadEmployeeStats(staff.user_id, `${staff.first_name} ${staff.last_name}`)}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-2 sm:px-3 py-1 rounded transition-all duration-300 flex items-center justify-center gap-1"
+                        title="Download daily statistics"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        <span className="hidden sm:inline">Stats</span>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteStaff(staff.user_id, `${staff.first_name} ${staff.last_name}`)}
+                        className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-2 sm:px-3 py-1 rounded transition-all duration-300"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )))}

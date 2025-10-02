@@ -36,7 +36,6 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem('loginTime');
           setUser(null);
           setError('');
-          console.log('User session cleared due to storage change');
         }
       }
     };
@@ -53,7 +52,6 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('loginTime');
         setUser(null);
         setError('');
-        console.log('User session cleared due to custom storage event');
       }
     };
 
@@ -114,7 +112,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('loginTime', Date.now().toString());
       setUser(loggedInUser);
 
-      console.log(`Login successful for ${loggedInUser.role} user: ${loggedInUser.email}`);
       
       return { 
         success: true, 
@@ -147,8 +144,6 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setError('');
 
-      console.log('User logged out successfully');
-
       // Dispatch custom event to notify other components
       window.dispatchEvent(new Event('localStorageChanged'));
     }
@@ -173,14 +168,10 @@ export const AuthProvider = ({ children }) => {
         setUser(updatedUser);
       }
 
-      console.log('Token validation successful');
       return true;
     } catch (error) {
-      console.error('Token validation error:', error.response?.status, error.message);
-
       // Only clear auth if it's a 401 (unauthorized) error
       if (error.response?.status === 401) {
-        console.log('Token validation failed: 401 Unauthorized - clearing auth');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setUser(null);
@@ -191,7 +182,6 @@ export const AuthProvider = ({ children }) => {
 
       // For all other errors, assume token is still valid
       // The API interceptor will handle actual authentication failures
-      console.warn('Token validation non-401 error - assuming token still valid');
       return true;
     }
   };

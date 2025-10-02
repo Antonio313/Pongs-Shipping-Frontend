@@ -23,10 +23,7 @@ function TransfersPage() {
 
   const loadTransferLists = async () => {
     try {
-      console.log('🔄 Loading transfer lists...');
       const response = await transfersAPI.getAllTransfers();
-      console.log('📦 Transfer lists response:', response);
-      console.log('📦 Transfer lists data:', response.data);
       setTransferLists(response.data);
     } catch (error) {
       console.error('❌ Error loading transfer lists:', error);
@@ -368,14 +365,12 @@ function CreateTransferModal({ packages, locations, onClose, onSuccess }) {
 
     setIsCreating(true);
     try {
-      const response = await transfersAPI.createTransfer({
+      await transfersAPI.createTransfer({
         destination,
         packages: selectedPackages,
         notes
       });
 
-      const result = response.data;
-      console.log('Transfer list created:', result);
       onSuccess();
 
     } catch (error) {
@@ -906,12 +901,8 @@ function ViewTransferModal({ transferList, onClose, onUpdate, getStatusBadge, fo
 
   const loadTransferPackages = async () => {
     try {
-      console.log('🔄 Loading packages for transfer:', transferList.transfer_id);
       const response = await transfersAPI.getTransferPackages(transferList.transfer_id);
-      console.log('📦 Transfer packages response:', response);
       const data = response.data;
-      console.log('📦 Transfer packages data:', data);
-      console.log('📦 Packages array:', data.packages);
       setPackages(data.packages || []);
 
       // Initialize checkoff status
@@ -920,7 +911,6 @@ function ViewTransferModal({ transferList, onClose, onUpdate, getStatusBadge, fo
         initialStatus[pkg.package_id] = pkg.checked_off || false;
       });
       setCheckoffStatus(initialStatus);
-      console.log('✅ Checkoff status initialized:', initialStatus);
     } catch (error) {
       console.error('❌ Error loading transfer packages:', error);
       console.error('Error details:', error.response?.data || error.message);

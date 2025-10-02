@@ -45,8 +45,7 @@ export const PreAlertProvider = ({ children }) => {
     const createPreAlert = async (preAlertData) => {
     try {
         setError('');
-        console.log('Creating prealert with data:', preAlertData); // Debug log
-        
+
         const response = await preAlertsAPI.createPreAlert(preAlertData);
         const newPreAlert = response.data.prealert;
         

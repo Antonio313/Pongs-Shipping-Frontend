@@ -3,12 +3,15 @@ import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
 import Header from '../../src/Header';
 import Footer from '../../src/Footer';
+import jsPDF from 'jspdf';
 
 function AdminProfile() {
   const { user } = useAuth();
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     fetchAdminStats();
@@ -16,18 +19,8 @@ function AdminProfile() {
 
   const fetchAdminStats = async () => {
     try {
-      console.log('🔍 Fetching profile stats...');
       const response = await adminAPI.getProfileStats();
-      console.log('📥 Full API Response:', response);
-      console.log('📊 Response Data:', response.data);
       const receivedStats = response.data?.stats || {};
-      console.log('✅ Extracted Stats:', receivedStats);
-      console.log('🔢 Stats Keys:', Object.keys(receivedStats));
-      console.log('📦 Deliveries:', receivedStats.deliveries_processed);
-      console.log('💰 Revenue:', receivedStats.total_revenue_collected);
-      console.log('📋 Packages Created:', receivedStats.packages_created);
-      console.log('✔️ PreAlerts:', receivedStats.prealerts_confirmed);
-      console.log('🚚 Transfers:', receivedStats.transfers_created);
       setStats(receivedStats);
     } catch (error) {
       console.error('❌ Error fetching staff stats:', error);
@@ -63,6 +56,80 @@ function AdminProfile() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleDownloadStats = async () => {
+    try {
+      setDownloading(true);
+      const response = await adminAPI.downloadDailyStats(selectedDate);
+      const data = response.data;
+
+      // Create PDF
+      const pdf = new jsPDF();
+      const margin = 20;
+      let yPos = 20;
+
+      // Header
+      pdf.setFontSize(20);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Daily Statistics Report', margin, yPos);
+      yPos += 15;
+
+      // Staff Information
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Staff Name: ${data.staff_name}`, margin, yPos);
+      yPos += 8;
+      pdf.text(`Email: ${data.staff_email}`, margin, yPos);
+      yPos += 8;
+      pdf.text(`Role: ${data.role}`, margin, yPos);
+      yPos += 8;
+      pdf.text(`Date: ${data.date}`, margin, yPos);
+      yPos += 15;
+
+      // Statistics Section
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Performance Statistics', margin, yPos);
+      yPos += 10;
+
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+
+      // Display statistics based on what's available
+      const stats = data.statistics;
+      Object.entries(stats).forEach(([key, value]) => {
+        const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const displayValue = typeof value === 'number' && key.includes('revenue') || key.includes('transaction')
+          ? `JM$${parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          : value;
+
+        pdf.text(`${label}: ${displayValue}`, margin, yPos);
+        yPos += 7;
+
+        // Add new page if needed
+        if (yPos > 270) {
+          pdf.addPage();
+          yPos = 20;
+        }
+      });
+
+      // Footer
+      yPos += 10;
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'italic');
+      pdf.text(`Generated: ${new Date(data.generated_at).toLocaleString()}`, margin, yPos);
+
+      // Save PDF
+      pdf.save(`daily-stats-${data.staff_name.replace(/\s+/g, '-')}-${selectedDate}.pdf`);
+
+      alert('Statistics downloaded successfully!');
+    } catch (error) {
+      console.error('Error downloading stats:', error);
+      alert('Failed to download statistics. Please try again.');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   if (loading) {
@@ -661,6 +728,53 @@ function AdminProfile() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Download Daily Statistics */}
+          <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+              <svg className="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download Daily Statistics
+            </h3>
+            <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+              <div className="flex-1 w-full">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <button
+                onClick={handleDownloadStats}
+                disabled={downloading}
+                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2"
+              >
+                {downloading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Downloading...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span>Download My Stats</span>
+                  </>
+                )}
+              </button>
+            </div>
+            <p className="mt-3 text-sm text-gray-600">
+              Download your end-of-day statistics for the selected date in PDF format for record keeping.
+            </p>
           </div>
 
           {/* Quick Actions */}

@@ -90,7 +90,6 @@ function AdminDashboard() {
 
     // Check if user has permission to access this tab
     if (!availableTabs.includes(newTab)) {
-      console.warn(`User ${user?.email} attempted to access unauthorized tab: ${newTab}`);
       return;
     }
 

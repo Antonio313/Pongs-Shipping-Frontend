@@ -13,13 +13,6 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 
-// Debug logging for environment variables
-console.log('🔧 Debug - Environment Variables (v3):');
-console.log('  VITE_API_URL:', import.meta.env.VITE_API_URL);
-console.log('  MODE:', import.meta.env.MODE);
-console.log('  PROD:', import.meta.env.PROD);
-console.log('  Final API_BASE_URL:', API_BASE_URL);
-
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -46,7 +39,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.log('API Interceptor: 401 Unauthorized - clearing session');
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('loginTime');
@@ -56,7 +48,6 @@ api.interceptors.response.use(
 
       // Only redirect if not already on login page
       if (window.location.pathname !== '/login') {
-        console.log('API Interceptor: Redirecting to login');
         window.location.href = '/login';
       }
     }
@@ -164,6 +155,12 @@ export const adminAPI = {
 
   // Change admin password
   changePassword: (data) => api.put('/admin/profile/password', data),
+
+  // Download daily statistics (current user)
+  downloadDailyStats: (date) => api.get('/admin/profile/stats/download', { params: { date } }),
+
+  // Download daily statistics for specific staff (Super Admin only)
+  downloadStaffDailyStats: (staffId, date) => api.get(`/admin/profile/stats/download/${staffId}`, { params: { date } }),
 }
 
 // Transfers API calls

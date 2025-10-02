@@ -52,7 +52,6 @@ export const ActivityProvider = ({ children }) => {
     // Mark as inactive after 45 minutes of no activity (more lenient for mobile users)
     activityTimeout.current = setTimeout(() => {
       setIsActive(false);
-      console.log('User marked as inactive after 45 minutes of no activity');
     }, 45 * 60 * 1000); // 45 minutes
   };
 
@@ -95,11 +94,9 @@ export const ActivityProvider = ({ children }) => {
 
     // If token is about to expire (within 10 minutes) and user is active, validate and potentially refresh
     if (timeRemaining < 10 * 60 * 1000 && timeRemaining > 0 && isActive) {
-      console.log('Token expiring soon, validating...');
       try {
         const isValid = await validateToken();
         if (isValid) {
-          console.log('Token validation successful, extending session');
           // Reset login time to extend session for active users
           localStorage.setItem('loginTime', Date.now().toString());
         }
@@ -110,13 +107,11 @@ export const ActivityProvider = ({ children }) => {
 
     // If token has expired and user is inactive, log them out
     if (timeRemaining <= 0 && !isActive) {
-      console.log('Token expired and user inactive, logging out');
       await logout();
     }
 
     // If token has been expired for more than 5 minutes, force logout regardless of activity
     if (timeRemaining < -5 * 60 * 1000) {
-      console.log('Token expired over 5 minutes ago, forcing logout');
       await logout();
     }
   };

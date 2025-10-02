@@ -39,14 +39,11 @@ function Header() {
     try {
       const isValid = await validateToken();
       if (!isValid) {
-        console.log('Token validation failed - user will be logged out');
         setTokenExpiredNotification(true);
         setTimeout(() => {
           setTokenExpiredNotification(false);
           navigate('/login');
         }, 3000);
-      } else {
-        console.log(`Token validation successful ${isManual ? '(manual)' : '(automatic)'}`);
       }
     } catch (error) {
       console.error('Token validation error:', error);

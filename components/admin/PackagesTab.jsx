@@ -19,11 +19,12 @@ function PackagesTab({ userRole, canChangeStatus }) {
   const filteredPackages = allPackages.filter(pkg => {
     const matchesSearch =
       (pkg.tracking_number || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (pkg.package_id || '').toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
       (pkg.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (pkg.first_name && pkg.last_name && `${pkg.first_name} ${pkg.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()));
-    
+
     const matchesStatus = statusFilter === 'all' || pkg.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -94,7 +95,7 @@ function PackagesTab({ userRole, canChangeStatus }) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search packages..."
+            placeholder="Search by tracking #, package #, customer, or description..."
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
           
@@ -145,6 +146,7 @@ function PackagesTab({ userRole, canChangeStatus }) {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package #</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tracking #</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
@@ -162,6 +164,7 @@ function PackagesTab({ userRole, canChangeStatus }) {
                       className="border-b hover:bg-gray-50 cursor-pointer"
                       onClick={() => handlePackageSelect(pkg)}
                     >
+                      <td className="px-4 py-3 font-semibold text-sm text-blue-600">{pkg.package_id || 'N/A'}</td>
                       <td className="px-4 py-3 font-mono text-sm">{pkg.tracking_number}</td>
                       <td className="px-4 py-3">
                         {pkg.first_name && pkg.last_name ? (
@@ -214,9 +217,14 @@ function PackagesTab({ userRole, canChangeStatus }) {
                 className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
                 onClick={() => handlePackageSelect(pkg)}
               >
-                {/* Header with tracking number and status */}
+                {/* Header with package number, tracking number and status */}
                 <div className="flex flex-col xs:flex-row xs:items-start xs:justify-between gap-2 mb-3">
                   <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded">
+                        {pkg.package_id || 'N/A'}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-2 mb-1">
                       <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -411,9 +419,15 @@ function PackageDetailsModal({ package: pkg, onClose, onStatusUpdate, onDelete, 
           {/* Status and Tracking */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:p-6 rounded-xl border border-blue-100">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Tracking Number</h3>
-                <p className="font-mono text-2xl font-bold text-blue-600">{pkg.tracking_number}</p>
+              <div className="flex-1">
+                <div className="mb-3">
+                  <h3 className="text-sm font-medium text-gray-600 mb-1">Package Number</h3>
+                  <p className="text-xl font-bold text-blue-600">{pkg.package_id || 'N/A'}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-600 mb-1">Tracking Number</h3>
+                  <p className="font-mono text-lg font-semibold text-gray-800">{pkg.tracking_number}</p>
+                </div>
               </div>
               <div className="text-center md:text-right">
                 <p className="text-sm text-gray-600 mb-2">Current Status</p>
@@ -592,9 +606,6 @@ function UpdatePackageModal({ package: pkg, onClose, onUpdate, getStatusBadge })
         sendEmailNotification: sendEmail
       });
 
-      const result = response.data;
-      console.log('Package updated successfully:', result);
-
       // Refresh the packages list
       onUpdate();
       onClose();
@@ -630,6 +641,10 @@ function UpdatePackageModal({ package: pkg, onClose, onUpdate, getStatusBadge })
           {/* Package Information */}
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
             <h3 className="text-sm font-medium text-gray-600 mb-2">Package Information</h3>
+            <div className="mb-2">
+              <span className="text-xs text-gray-500">Package #: </span>
+              <span className="font-bold text-blue-600">{pkg.package_id || 'N/A'}</span>
+            </div>
             <p className="font-mono text-lg font-semibold">{pkg.tracking_number}</p>
             <p className="text-sm text-gray-600">{pkg.description}</p>
             <div className="mt-2">
