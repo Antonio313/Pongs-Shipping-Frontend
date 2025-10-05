@@ -23,6 +23,7 @@ function CustomerDashboard() {
   const [trackingError, setTrackingError] = useState('');
   const [packageFilter, setPackageFilter] = useState('all'); // 'all', 'delivered', 'outstanding'
   const [preAlertFilter, setPreAlertFilter] = useState('all'); // 'all', 'pending'
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Parse the address into comprehensive address components
   const parseAddress = (address) => {
@@ -121,6 +122,14 @@ function CustomerDashboard() {
     formData.append('description', preAlertData.description);
     formData.append('price', preAlertData.price);
 
+    if (preAlertData.tracking_number) {
+      formData.append('tracking_number', preAlertData.tracking_number);
+    }
+
+    if (preAlertData.carrier) {
+      formData.append('carrier', preAlertData.carrier);
+    }
+
     if (preAlertData.receipt) {
       formData.append('receipt', preAlertData.receipt);
     }
@@ -130,6 +139,9 @@ function CustomerDashboard() {
     if (result.success) {
       setShowPreAlertModal(false);
       setEditingPreAlert(null);
+      setSuccessMessage('Pre-Alert created successfully! 🎉');
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000);
     } else {
       alert(`Error: ${result.error}`);
     }
@@ -141,6 +153,14 @@ function CustomerDashboard() {
     formData.append('description', preAlertData.description);
     formData.append('price', preAlertData.price);
 
+    if (preAlertData.tracking_number) {
+      formData.append('tracking_number', preAlertData.tracking_number);
+    }
+
+    if (preAlertData.carrier) {
+      formData.append('carrier', preAlertData.carrier);
+    }
+
     if (preAlertData.receipt) {
       formData.append('receipt', preAlertData.receipt);
     }
@@ -150,6 +170,9 @@ function CustomerDashboard() {
     if (result.success) {
       setShowPreAlertModal(false);
       setEditingPreAlert(null);
+      setSuccessMessage('Pre-Alert updated successfully! ✅');
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000);
     } else {
       alert(`Error: ${result.error}`);
     }
@@ -162,6 +185,9 @@ function CustomerDashboard() {
 
     if (result.success) {
       setDeletingPreAlert(null);
+      setSuccessMessage('Pre-Alert deleted successfully! 🗑️');
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000);
     } else {
       alert(`Error: ${result.error}`);
     }
@@ -333,7 +359,7 @@ function CustomerDashboard() {
               </div>
               <div className="w-full md:w-auto flex flex-col space-y-3">
                 <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 sm:p-4 text-center md:text-left">
-                  <p className="text-sm">Customer ID: {user?.user_id}</p>
+                  <p className="text-sm">Customer Number: {user?.customer_number || `#${user?.user_id}`}</p>
                   <p className="text-sm">Pickup Branch: {user?.branch}</p>
                 </div>
                 <button
@@ -351,6 +377,32 @@ function CustomerDashboard() {
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          {/* Success Message Notification */}
+          {successMessage && (
+            <div className="mb-6 animate-fade-in">
+              <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 shadow-lg">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <p className="text-sm font-medium text-green-800">{successMessage}</p>
+                  </div>
+                  <button
+                    onClick={() => setSuccessMessage('')}
+                    className="ml-auto flex-shrink-0 text-green-500 hover:text-green-700 transition-colors"
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Enhanced User Address Information */}
           <div className="bg-gradient-to-r from-white to-blue-50 rounded-xl shadow-lg border border-blue-100 p-4 sm:p-6 mb-6 sm:mb-8 transform transition-all duration-200 hover:shadow-xl">
             <div className="flex items-center mb-4 sm:mb-6">
@@ -928,6 +980,8 @@ function PreAlertModal({ onClose, onSubmit, editingPreAlert }) {
   const [formData, setFormData] = useState({
     description: editingPreAlert?.description || '',
     price: editingPreAlert?.price || '',
+    tracking_number: editingPreAlert?.tracking_number || '',
+    carrier: editingPreAlert?.carrier || '',
     receipt: null
   });
   const [errors, setErrors] = useState({});
@@ -1011,6 +1065,44 @@ function PreAlertModal({ onClose, onSubmit, editingPreAlert }) {
             {errors.price && (
               <p className="mt-1 text-sm text-red-600">{errors.price}</p>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tracking Number
+            </label>
+            <input
+              type="text"
+              value={formData.tracking_number}
+              onChange={(e) => setFormData(prev => ({ ...prev, tracking_number: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter tracking number (e.g., 1Z999AA10123456784)"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Optional: Enter the carrier's tracking number for your package
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Carrier
+            </label>
+            <select
+              value={formData.carrier}
+              onChange={(e) => setFormData(prev => ({ ...prev, carrier: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            >
+              <option value="">Select Carrier</option>
+              <option value="Amazon">Amazon</option>
+              <option value="UPS">UPS</option>
+              <option value="USPS">USPS</option>
+              <option value="FedEx">FedEx</option>
+              <option value="DHL">DHL</option>
+              <option value="Other">Other</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Optional: Select the shipping carrier
+            </p>
           </div>
 
           <div>
@@ -1185,6 +1277,32 @@ function ViewPreAlertModal({ prealert, onClose }) {
               </div>
             </div>
           </div>
+
+          {(prealert.tracking_number || prealert.carrier) && (
+            <div className="grid grid-cols-2 gap-4">
+              {prealert.tracking_number && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tracking Number
+                  </label>
+                  <div className="bg-gray-50 rounded-lg p-3 border">
+                    <p className="text-gray-800 font-mono text-sm">{prealert.tracking_number}</p>
+                  </div>
+                </div>
+              )}
+
+              {prealert.carrier && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Carrier
+                  </label>
+                  <div className="bg-gray-50 rounded-lg p-3 border">
+                    <p className="text-gray-800">{prealert.carrier}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

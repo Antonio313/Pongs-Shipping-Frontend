@@ -21,6 +21,8 @@ function CustomerTab({
   const [downloadingInvoice, setDownloadingInvoice] = useState(false);
   const [sendingNotification, setSendingNotification] = useState(false);
   const [notificationStatus, setNotificationStatus] = useState(null);
+  const [branchFilter, setBranchFilter] = useState('all');
+  const [preAlertSearchQuery, setPreAlertSearchQuery] = useState('');
 
   const [packageForm, setPackageForm] = useState({
     description: '',
@@ -30,10 +32,30 @@ function CustomerTab({
     notes: ''
   });
 
-  const filteredCustomers = customers.filter(customer => 
-    `${customer.first_name} ${customer.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCustomers = customers.filter(customer => {
+    // Search by name, email, or customer number
+    const matchesSearch =
+      `${customer.first_name} ${customer.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (customer.customer_number && customer.customer_number.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    // Filter by branch
+    const matchesBranch = branchFilter === 'all' || customer.branch === branchFilter;
+
+    return matchesSearch && matchesBranch;
+  });
+
+  // Filter pre-alerts by search query (tracking number, description, or carrier)
+  const filteredPreAlerts = customerPreAlerts.filter(alert => {
+    if (!preAlertSearchQuery.trim()) return true;
+
+    const searchLower = preAlertSearchQuery.toLowerCase();
+    return (
+      (alert.tracking_number && alert.tracking_number.toLowerCase().includes(searchLower)) ||
+      alert.description.toLowerCase().includes(searchLower) ||
+      (alert.carrier && alert.carrier.toLowerCase().includes(searchLower))
+    );
+  });
 
   const handleInternalPreAlertSelect = async (preAlert) => {
     setSelectedPreAlert(preAlert);
@@ -130,19 +152,46 @@ function CustomerTab({
     <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-8">
       {/* Mobile-Responsive Customer List */}
       <div className="lg:col-span-1">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">Customers</h3>
-          <div className="flex-1">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Customers</h3>
+
+        {/* Search and Filter Controls */}
+        <div className="space-y-3 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Search
+            </label>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search customers..."
+              placeholder="Search by name or customer number..."
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Search by customer name or customer number
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Filter by Location
+            </label>
+            <select
+              value={branchFilter}
+              onChange={(e) => setBranchFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white"
+            >
+              <option value="all">All Locations</option>
+              <option value="Priory">Priory</option>
+              <option value="Ocho Rios">Ocho Rios</option>
+            </select>
+          </div>
+
+          <div className="text-sm text-gray-600 bg-blue-50 p-2 rounded">
+            Showing {filteredCustomers.length} of {customers.length} customers
           </div>
         </div>
-        
+
         <div className="bg-gray-50 rounded-lg border border-gray-200 max-h-96 overflow-y-auto">
           {filteredCustomers.length === 0 ? (
             <div className="text-center py-8">
@@ -150,22 +199,29 @@ function CustomerTab({
             </div>
           ) : (
             filteredCustomers.map(customer => (
-              <div 
-                key={customer.user_id} 
+              <div
+                key={customer.user_id}
                 className={`p-4 border-b cursor-pointer transition-all duration-200 ${
-                  selectedCustomer?.user_id === customer.user_id 
-                    ? 'bg-blue-50 border-l-4 border-l-blue-500' 
+                  selectedCustomer?.user_id === customer.user_id
+                    ? 'bg-blue-50 border-l-4 border-l-blue-500'
                     : 'hover:bg-gray-100'
                 }`}
                 onClick={() => handleCustomerSelect(customer)}
               >
                 <div className="flex justify-between items-start">
-                  <div>
+                  <div className="flex-1">
                     <h4 className="font-semibold text-gray-800">{customer.first_name} {customer.last_name}</h4>
+                    <p className="text-sm text-gray-600 mt-1">
+                      <span className="font-medium">ID:</span> {customer.customer_number || `#${customer.user_id}`}
+                    </p>
                     <p className="text-sm text-gray-600">{customer.email}</p>
-                    <p className="text-xs text-gray-500 mt-1">{customer.branch} branch</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded bg-gray-200 text-gray-700">
+                        {customer.branch}
+                      </span>
+                    </p>
                   </div>
-                  <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                  <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex-shrink-0">
                     {customer.prealert_count} pre-alert(s)
                   </span>
                 </div>
@@ -191,41 +247,84 @@ function CustomerTab({
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                <h4 className="text-sm font-medium text-gray-600 mb-1">Contact Information</h4>
-                <p className="text-gray-800">{selectedCustomer.email}</p>
-                {selectedCustomer.phone && <p className="text-gray-800 mt-1">{selectedCustomer.phone}</p>}
+                <h4 className="text-sm font-medium text-gray-600 mb-1">Customer Number</h4>
+                <p className="text-gray-800 font-semibold text-lg">{selectedCustomer.customer_number || `#${selectedCustomer.user_id}`}</p>
               </div>
-              
+
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                 <h4 className="text-sm font-medium text-gray-600 mb-1">Branch</h4>
                 <p className="text-gray-800">{selectedCustomer.branch}</p>
               </div>
-              
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 md:col-span-2">
+
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <h4 className="text-sm font-medium text-gray-600 mb-1">Verification Status</h4>
+                <p className="text-gray-800">
+                  {selectedCustomer.is_verified ? (
+                    <span className="inline-flex items-center text-green-700">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Verified
+                    </span>
+                  ) : (
+                    <span className="text-gray-600">Not Verified</span>
+                  )}
+                </p>
+              </div>
+
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 md:col-span-2 lg:col-span-3">
+                <h4 className="text-sm font-medium text-gray-600 mb-1">Contact Information</h4>
+                <p className="text-gray-800">{selectedCustomer.email}</p>
+                {selectedCustomer.phone && <p className="text-gray-800 mt-1">{selectedCustomer.phone}</p>}
+              </div>
+
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 md:col-span-2 lg:col-span-3">
                 <h4 className="text-sm font-medium text-gray-600 mb-1">Address</h4>
                 <p className="text-gray-800">{selectedCustomer.address}</p>
               </div>
-              
+
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                 <h4 className="text-sm font-medium text-gray-600 mb-1">Customer Since</h4>
                 <p className="text-gray-800">{formatDate(selectedCustomer.created_at)}</p>
               </div>
-              
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                <h4 className="text-sm font-medium text-gray-600 mb-1">Verification Status</h4>
-                <p className="text-gray-800">
-                  {selectedCustomer.is_verified ? 'Verified' : 'Not Verified'}
-                </p>
-              </div>
             </div>
 
-            <h4 className="text-lg font-semibold text-gray-800 mb-4">Pre-Alerts</h4>
-            
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+              <h4 className="text-lg font-semibold text-gray-800">Pre-Alerts ({customerPreAlerts.length})</h4>
+
+              {customerPreAlerts.length > 0 && (
+                <div className="w-full sm:w-auto">
+                  <input
+                    type="text"
+                    value={preAlertSearchQuery}
+                    onChange={(e) => setPreAlertSearchQuery(e.target.value)}
+                    placeholder="Search by tracking #, description, or carrier..."
+                    className="w-full sm:w-80 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                  {preAlertSearchQuery && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Showing {filteredPreAlerts.length} of {customerPreAlerts.length} pre-alerts
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
             {customerPreAlerts.length === 0 ? (
               <div className="text-center py-8 bg-gray-50 rounded-lg">
                 <p className="text-gray-600">No pre-alerts found for this customer</p>
+              </div>
+            ) : filteredPreAlerts.length === 0 ? (
+              <div className="text-center py-8 bg-gray-50 rounded-lg">
+                <p className="text-gray-600">No pre-alerts match your search</p>
+                <button
+                  onClick={() => setPreAlertSearchQuery('')}
+                  className="mt-2 text-blue-600 hover:text-blue-800 text-sm underline"
+                >
+                  Clear search
+                </button>
               </div>
             ) : (
               <>
@@ -235,6 +334,7 @@ function CustomerTab({
                     <table className="w-full">
                       <thead>
                         <tr className="bg-gray-50">
+                          <th className="px-4 py-2 text-left">Tracking Info</th>
                           <th className="px-4 py-2 text-left">Description</th>
                           <th className="px-4 py-2 text-left">Price</th>
                           <th className="px-4 py-2 text-left">Status</th>
@@ -244,13 +344,38 @@ function CustomerTab({
                         </tr>
                       </thead>
                       <tbody>
-                        {customerPreAlerts.map(alert => (
+                        {filteredPreAlerts.map(alert => (
                           <tr
                             key={alert.prealert_id}
                             className={`border-b cursor-pointer ${selectedPreAlert?.prealert_id === alert.prealert_id ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
                             onClick={() => handleInternalPreAlertSelect(alert)}
                           >
-                            <td className="px-4 py-3">{alert.description}</td>
+                            <td className="px-4 py-3">
+                              {alert.tracking_number || alert.carrier ? (
+                                <div className="space-y-1">
+                                  {alert.tracking_number && (
+                                    <div className="flex items-center text-sm">
+                                      <svg className="w-3 h-3 mr-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                                      </svg>
+                                      <span className="font-mono text-xs">{alert.tracking_number}</span>
+                                    </div>
+                                  )}
+                                  {alert.carrier && (
+                                    <div className="flex items-center">
+                                      <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{alert.carrier}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-gray-400 text-xs">No tracking</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="max-w-xs truncate" title={alert.description}>
+                                {alert.description}
+                              </div>
+                            </td>
                             <td className="px-4 py-3">${alert.price}</td>
                             <td className="px-4 py-3">{getStatusBadge(alert.status)}</td>
                             <td className="px-4 py-3">
@@ -270,7 +395,7 @@ function CustomerTab({
                                 </span>
                               )}
                             </td>
-                            <td className="px-4 py-3">{formatDate(alert.created_at)}</td>
+                            <td className="px-4 py-3 text-sm">{formatDate(alert.created_at)}</td>
                             <td className="px-4 py-3">
                               {alert.status === 'U' && canConfirmPreAlert && (
                                 <button
@@ -302,7 +427,7 @@ function CustomerTab({
 
                 {/* Mobile Card View */}
                 <div className="lg:hidden space-y-4">
-                  {customerPreAlerts.map(alert => (
+                  {filteredPreAlerts.map(alert => (
                     <div
                       key={alert.prealert_id}
                       className={`bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${
@@ -324,6 +449,26 @@ function CustomerTab({
                           {getStatusBadge(alert.status)}
                         </div>
                       </div>
+
+                      {/* Tracking Information */}
+                      {(alert.tracking_number || alert.carrier) && (
+                        <div className="mb-3 bg-blue-50 rounded-lg p-2 border border-blue-100">
+                          <div className="flex items-center gap-1 mb-1">
+                            <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p className="text-xs font-medium text-blue-700">Tracking Info</p>
+                          </div>
+                          {alert.tracking_number && (
+                            <p className="text-xs font-mono text-gray-700">{alert.tracking_number}</p>
+                          )}
+                          {alert.carrier && (
+                            <span className="inline-block mt-1 text-xs bg-white px-2 py-0.5 rounded border border-blue-200 text-gray-700">
+                              {alert.carrier}
+                            </span>
+                          )}
+                        </div>
+                      )}
 
                       {/* Description */}
                       <div className="mb-3">
@@ -471,6 +616,34 @@ function PreAlertDetailsModal({ preAlert, onClose, onDownloadInvoice, downloadin
               {preAlert.cost && <p className="text-sm">Cost: ${preAlert.cost}</p>}
             </div>
           </div>
+
+          {/* Tracking Information */}
+          {(preAlert.tracking_number || preAlert.carrier) && (
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h3 className="text-sm font-medium text-blue-700 mb-3 flex items-center">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Tracking Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {preAlert.tracking_number && (
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Tracking Number</p>
+                    <p className="font-mono font-semibold text-blue-800">{preAlert.tracking_number}</p>
+                  </div>
+                )}
+                {preAlert.carrier && (
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Carrier</p>
+                    <span className="inline-block bg-white px-3 py-1 rounded border border-blue-300 font-medium text-gray-800">
+                      {preAlert.carrier}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Package Details */}
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
