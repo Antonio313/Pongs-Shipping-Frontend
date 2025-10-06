@@ -20,6 +20,13 @@ function SuperAdminDashboard() {
   const [activeSection, setActiveSection] = useState('overview');
   const [selectedPeriod, setSelectedPeriod] = useState('7');
 
+  // Modal states
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState({ type: '', message: '' });
+  const [selectedStaffForStats, setSelectedStaffForStats] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+
   useEffect(() => {
     loadDashboardData();
   }, [selectedPeriod]);
@@ -100,6 +107,92 @@ function SuperAdminDashboard() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleDownloadEmployeeStats = async (staffId, staffName) => {
+    setSelectedStaffForStats({ staffId, staffName });
+    setShowDateModal(true);
+  };
+
+  const confirmDownloadStats = async () => {
+    if (!selectedStaffForStats) return;
+
+    const { staffId, staffName } = selectedStaffForStats;
+    setShowDateModal(false);
+
+    try {
+      const response = await adminAPI.downloadStaffDailyStats(staffId, selectedDate);
+      const data = response.data;
+
+      // Create PDF
+      const pdf = new jsPDF();
+      const margin = 20;
+      let yPos = 20;
+
+      // Header
+      pdf.setFontSize(20);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Daily Statistics Report', margin, yPos);
+      yPos += 15;
+
+      // Staff Information
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Staff Name: ${data.staff_name}`, margin, yPos);
+      yPos += 8;
+      pdf.text(`Email: ${data.staff_email}`, margin, yPos);
+      yPos += 8;
+      pdf.text(`Role: ${data.role}`, margin, yPos);
+      yPos += 8;
+      pdf.text(`Date: ${data.date}`, margin, yPos);
+      yPos += 8;
+      pdf.text(`Downloaded By: ${data.downloaded_by}`, margin, yPos);
+      yPos += 15;
+
+      // Statistics Section
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Performance Statistics', margin, yPos);
+      yPos += 10;
+
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+
+      // Display statistics based on what's available
+      const stats = data.statistics;
+      Object.entries(stats).forEach(([key, value]) => {
+        const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const displayValue = typeof value === 'number' && (key.includes('revenue') || key.includes('transaction'))
+          ? `JM$${parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          : value;
+
+        pdf.text(`${label}: ${displayValue}`, margin, yPos);
+        yPos += 7;
+
+        // Add new page if needed
+        if (yPos > 270) {
+          pdf.addPage();
+          yPos = 20;
+        }
+      });
+
+      // Footer
+      yPos += 10;
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'italic');
+      pdf.text(`Generated: ${new Date(data.generated_at).toLocaleString()}`, margin, yPos);
+
+      // Save PDF
+      pdf.save(`daily-stats-${staffName.replace(/\s+/g, '-')}-${selectedDate}.pdf`);
+
+      setModalMessage({ type: 'success', message: `Statistics for ${staffName} downloaded successfully!` });
+      setShowMessageModal(true);
+      setSelectedStaffForStats(null);
+    } catch (error) {
+      console.error('Error downloading employee stats:', error);
+      setModalMessage({ type: 'error', message: error.response?.data?.message || 'Failed to download statistics. Please try again.' });
+      setShowMessageModal(true);
+    }
   };
 
   if (loading && !dashboardData) {
@@ -560,7 +653,12 @@ function SuperAdminDashboard() {
 
               {/* Management Section */}
               {activeSection === 'management' && (
-                <ManagementSection onUpdate={loadDashboardData} />
+                <ManagementSection
+                  onUpdate={loadDashboardData}
+                  setModalMessage={setModalMessage}
+                  setShowMessageModal={setShowMessageModal}
+                  onDownloadStats={handleDownloadEmployeeStats}
+                />
               )}
 
               {/* Mobile-Responsive Activity Log Section */}
@@ -616,12 +714,86 @@ function SuperAdminDashboard() {
       </main>
 
       <Footer />
+
+      {/* Date Selection Modal */}
+      {showDateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Select Date for Statistics</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Download statistics for {selectedStaffForStats?.staffName}
+            </p>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              />
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowDateModal(false);
+                  setSelectedStaffForStats(null);
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDownloadStats}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-300"
+              >
+                Download Stats
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Message Modal */}
+      {showMessageModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center mb-4">
+              {modalMessage.type === 'success' ? (
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              ) : (
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+              )}
+              <h3 className="text-lg font-semibold text-gray-900">
+                {modalMessage.type === 'success' ? 'Success' : 'Error'}
+              </h3>
+            </div>
+            <p className="text-gray-600 mb-6">{modalMessage.message}</p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowMessageModal(false)}
+                className="bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-300"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // Management Section Component
-function ManagementSection({ onUpdate }) {
+function ManagementSection({ onUpdate, setModalMessage, setShowMessageModal, onDownloadStats }) {
   const [staffList, setStaffList] = useState([]);
   const [filteredStaffList, setFilteredStaffList] = useState([]);
   const [showAddStaffModal, setShowAddStaffModal] = useState(false);
@@ -676,83 +848,6 @@ function ManagementSection({ onUpdate }) {
     setFilteredStaffList(filtered);
   };
 
-  const handleDownloadEmployeeStats = async (staffId, staffName) => {
-    const date = prompt(`Enter date (YYYY-MM-DD) to download statistics for ${staffName}:`, new Date().toISOString().split('T')[0]);
-
-    if (!date) return;
-
-    try {
-      const response = await adminAPI.downloadStaffDailyStats(staffId, date);
-      const data = response.data;
-
-      // Create PDF
-      const pdf = new jsPDF();
-      const margin = 20;
-      let yPos = 20;
-
-      // Header
-      pdf.setFontSize(20);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Daily Statistics Report', margin, yPos);
-      yPos += 15;
-
-      // Staff Information
-      pdf.setFontSize(12);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(`Staff Name: ${data.staff_name}`, margin, yPos);
-      yPos += 8;
-      pdf.text(`Email: ${data.staff_email}`, margin, yPos);
-      yPos += 8;
-      pdf.text(`Role: ${data.role}`, margin, yPos);
-      yPos += 8;
-      pdf.text(`Date: ${data.date}`, margin, yPos);
-      yPos += 8;
-      pdf.text(`Downloaded By: ${data.downloaded_by}`, margin, yPos);
-      yPos += 15;
-
-      // Statistics Section
-      pdf.setFontSize(16);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Performance Statistics', margin, yPos);
-      yPos += 10;
-
-      pdf.setFontSize(11);
-      pdf.setFont('helvetica', 'normal');
-
-      // Display statistics based on what's available
-      const stats = data.statistics;
-      Object.entries(stats).forEach(([key, value]) => {
-        const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        const displayValue = typeof value === 'number' && (key.includes('revenue') || key.includes('transaction'))
-          ? `JM$${parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-          : value;
-
-        pdf.text(`${label}: ${displayValue}`, margin, yPos);
-        yPos += 7;
-
-        // Add new page if needed
-        if (yPos > 270) {
-          pdf.addPage();
-          yPos = 20;
-        }
-      });
-
-      // Footer
-      yPos += 10;
-      pdf.setFontSize(9);
-      pdf.setFont('helvetica', 'italic');
-      pdf.text(`Generated: ${new Date(data.generated_at).toLocaleString()}`, margin, yPos);
-
-      // Save PDF
-      pdf.save(`daily-stats-${staffName.replace(/\s+/g, '-')}-${date}.pdf`);
-
-      alert(`Statistics for ${staffName} downloaded successfully!`);
-    } catch (error) {
-      console.error('Error downloading employee stats:', error);
-      alert(error.response?.data?.message || 'Failed to download statistics. Please try again.');
-    }
-  };
-
   const handleDeleteStaff = async (staffId, staffName) => {
     if (!window.confirm(`Are you sure you want to delete ${staffName}? This action cannot be undone.`)) {
       return;
@@ -762,10 +857,12 @@ function ManagementSection({ onUpdate }) {
       await superAdminAPI.deleteStaff(staffId);
       loadStaff();
       onUpdate();
-      alert('Staff member deleted successfully');
+      setModalMessage({ type: 'success', message: 'Staff member deleted successfully' });
+      setShowMessageModal(true);
     } catch (error) {
       console.error('Error deleting staff:', error);
-      alert(error.response?.data?.message || 'Failed to delete staff member');
+      setModalMessage({ type: 'error', message: error.response?.data?.message || 'Failed to delete staff member' });
+      setShowMessageModal(true);
     }
   };
 
@@ -903,7 +1000,7 @@ function ManagementSection({ onUpdate }) {
                   <td className="px-2 sm:px-4 py-3">
                     <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
                       <button
-                        onClick={() => handleDownloadEmployeeStats(staff.user_id, `${staff.first_name} ${staff.last_name}`)}
+                        onClick={() => onDownloadStats(staff.user_id, `${staff.first_name} ${staff.last_name}`)}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-2 sm:px-3 py-1 rounded transition-all duration-300 flex items-center justify-center gap-1"
                         title="Download daily statistics"
                       >
@@ -936,6 +1033,8 @@ function ManagementSection({ onUpdate }) {
             onUpdate();
             setShowAddStaffModal(false);
           }}
+          setModalMessage={setModalMessage}
+          setShowMessageModal={setShowMessageModal}
         />
       )}
     </div>
@@ -943,7 +1042,7 @@ function ManagementSection({ onUpdate }) {
 }
 
 // Add Staff Modal Component
-function AddStaffModal({ onClose, onSuccess }) {
+function AddStaffModal({ onClose, onSuccess, setModalMessage, setShowMessageModal }) {
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -963,10 +1062,12 @@ function AddStaffModal({ onClose, onSuccess }) {
     try {
       await superAdminAPI.createStaff(formData);
       onSuccess();
-      alert('Staff member added successfully');
+      setModalMessage({ type: 'success', message: 'Staff member added successfully' });
+      setShowMessageModal(true);
     } catch (error) {
       console.error('Error adding staff:', error);
-      alert(error.response?.data?.message || 'Failed to add staff member');
+      setModalMessage({ type: 'error', message: error.response?.data?.message || 'Failed to add staff member' });
+      setShowMessageModal(true);
     } finally {
       setLoading(false);
     }
