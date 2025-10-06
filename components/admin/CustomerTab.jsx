@@ -605,6 +605,12 @@ function PreAlertDetailsModal({ preAlert, onClose, onDownloadInvoice, downloadin
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
               <h3 className="text-sm font-medium text-gray-600 mb-2">Basic Information</h3>
               <p className="font-semibold">Pre-Alert ID: {preAlert.prealert_id}</p>
+              {preAlert.first_name && (
+                <p className="text-sm mt-2">Customer: {preAlert.first_name} {preAlert.last_name}</p>
+              )}
+              {preAlert.customer_number && (
+                <p className="text-sm">Customer #: {preAlert.customer_number}</p>
+              )}
               <div className="mt-2">
                 {getStatusBadge(preAlert.status)}
               </div>

@@ -108,6 +108,10 @@ function DeliveryModal({ customer, packages, onClose, onSubmit, loading, adminUs
                 <p className="font-semibold text-gray-900">{customer.first_name} {customer.last_name}</p>
               </div>
               <div>
+                <p className="text-sm text-gray-600">Customer Number</p>
+                <p className="font-semibold text-blue-700 text-lg">{customer.customer_number || `#${customer.user_id}`}</p>
+              </div>
+              <div>
                 <p className="text-sm text-gray-600">Email</p>
                 <p className="font-medium text-gray-700">{customer.email}</p>
               </div>

@@ -201,6 +201,7 @@ function TransfersPage() {
                     <thead>
                       <tr className="bg-gray-50">
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transfer ID</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Origin</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Destination</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package Count</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -217,6 +218,9 @@ function TransfersPage() {
                           onClick={() => handleViewTransfer(transferList)}
                         >
                           <td className="px-4 py-3 font-mono text-sm">TL-{transferList.transfer_id}</td>
+                          <td className="px-4 py-3">
+                            {locations.find(loc => loc.value === transferList.origin)?.label || transferList.origin || 'N/A'}
+                          </td>
                           <td className="px-4 py-3">
                             {locations.find(loc => loc.value === transferList.destination)?.label || transferList.destination}
                           </td>
@@ -313,6 +317,7 @@ function TransfersPage() {
 // Create Transfer Modal Component
 function CreateTransferModal({ packages, locations, onClose, onSuccess }) {
   const [selectedPackages, setSelectedPackages] = useState([]);
+  const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
   const [notes, setNotes] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -353,6 +358,11 @@ function CreateTransferModal({ packages, locations, onClose, onSuccess }) {
   };
 
   const handleCreateTransfer = async () => {
+    if (!origin) {
+      alert('Please select an origin');
+      return;
+    }
+
     if (!destination) {
       alert('Please select a destination');
       return;
@@ -366,6 +376,7 @@ function CreateTransferModal({ packages, locations, onClose, onSuccess }) {
     setIsCreating(true);
     try {
       await transfersAPI.createTransfer({
+        origin,
         destination,
         packages: selectedPackages,
         notes
@@ -401,6 +412,22 @@ function CreateTransferModal({ packages, locations, onClose, onSuccess }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                Origin <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={origin}
+                onChange={(e) => setOrigin(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select origin...</option>
+                {locations.map(location => (
+                  <option key={location.value} value={location.value}>{location.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Destination <span className="text-red-500">*</span>
               </label>
               <select
@@ -414,19 +441,19 @@ function CreateTransferModal({ packages, locations, onClose, onSuccess }) {
                 ))}
               </select>
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Notes
-              </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Optional transfer notes..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                rows={3}
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Notes
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Optional transfer notes..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              rows={3}
+            />
           </div>
 
           {/* Eligible Status Info */}
@@ -545,7 +572,7 @@ function CreateTransferModal({ packages, locations, onClose, onSuccess }) {
           </button>
           <button
             onClick={handleCreateTransfer}
-            disabled={isCreating || selectedPackages.length === 0 || !destination}
+            disabled={isCreating || selectedPackages.length === 0 || !origin || !destination}
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-300 flex items-center space-x-2"
           >
             {isCreating && (
@@ -567,6 +594,7 @@ function EditTransferModal({ transferList, packages, locations, onClose, onSucce
   const [currentPackages, setCurrentPackages] = useState([]);
   const [availablePackages, setAvailablePackages] = useState([]);
   const [selectedToAdd, setSelectedToAdd] = useState([]);
+  const [origin, setOrigin] = useState(transferList.origin || '');
   const [destination, setDestination] = useState(transferList.destination);
   const [notes, setNotes] = useState(transferList.notes || '');
   const [loading, setLoading] = useState(true);
@@ -638,6 +666,7 @@ function EditTransferModal({ transferList, packages, locations, onClose, onSucce
     setIsUpdating(true);
     try {
       await transfersAPI.updateTransfer(transferList.transfer_id, {
+        origin,
         destination,
         notes
       });
@@ -679,6 +708,22 @@ function EditTransferModal({ transferList, packages, locations, onClose, onSucce
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <h3 className="text-lg font-medium text-gray-800 mb-4">Transfer Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Origin <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={origin}
+                  onChange={(e) => setOrigin(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select origin...</option>
+                  {locations.map(location => (
+                    <option key={location.value} value={location.value}>{location.label}</option>
+                  ))}
+                </select>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Destination <span className="text-red-500">*</span>
@@ -962,6 +1007,7 @@ function ViewTransferModal({ transferList, onClose, onUpdate, getStatusBadge, fo
           <div>
             <h2 className="text-xl font-semibold text-gray-800">Transfer List TL-{transferList.transfer_id}</h2>
             <p className="text-sm text-gray-600">
+              Origin: {locations.find(loc => loc.value === transferList.origin)?.label || transferList.origin || 'N/A'} →
               Destination: {locations.find(loc => loc.value === transferList.destination)?.label || transferList.destination}
             </p>
           </div>

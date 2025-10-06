@@ -453,7 +453,9 @@ function PackageDetailsModal({ package: pkg, onClose, onStatusUpdate, onDelete, 
               {pkg.first_name && pkg.last_name ? (
                 <div className="space-y-2">
                   <p className="text-xl font-semibold text-gray-900">{pkg.first_name} {pkg.last_name}</p>
-                  <p className="text-sm text-gray-600 bg-green-100 px-3 py-1 rounded-full inline-block">User ID: {pkg.user_id}</p>
+                  <p className="text-sm text-gray-600 bg-green-100 px-3 py-1 rounded-full inline-block">
+                    Customer #: {pkg.customer_number || `#${pkg.user_id}`}
+                  </p>
                 </div>
               ) : (
                 <p className="text-gray-500 italic">Customer information not available</p>

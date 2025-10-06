@@ -57,6 +57,7 @@ function DeliveriesTab() {
     const emailMatch = customer.email?.toLowerCase().includes(searchTerm) || false;
     const phoneMatch = customer.phone?.toLowerCase().includes(searchTerm) || false;
     const branchMatch = customer.branch?.toLowerCase().includes(searchTerm) || false;
+    const customerNumberMatch = customer.customer_number?.toLowerCase().includes(searchTerm) || false;
 
     // Also search within packages (with safety check)
     const packageMatch = (customer.packages || []).some(pkg =>
@@ -64,7 +65,7 @@ function DeliveriesTab() {
       pkg?.description?.toLowerCase().includes(searchTerm)
     );
 
-    return fullName.includes(searchTerm) || emailMatch || phoneMatch || branchMatch || packageMatch;
+    return fullName.includes(searchTerm) || emailMatch || phoneMatch || branchMatch || customerNumberMatch || packageMatch;
   });
 
   const handleDeliverPackages = (customer, packages) => {
@@ -229,7 +230,7 @@ function DeliveriesTab() {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search customers, tracking numbers, or package descriptions..."
+              placeholder="Search by customer name, number, tracking #, or description..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
@@ -333,7 +334,13 @@ function DeliveriesTab() {
                       </div>
 
                       {/* Customer Contact Info */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-gray-600">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm text-gray-600">
+                        <div className="flex items-center">
+                          <svg className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                          </svg>
+                          <span className="font-semibold text-blue-700">{customer.customer_number || `#${customer.user_id}`}</span>
+                        </div>
                         <div className="flex items-center">
                           <svg className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -474,6 +481,7 @@ function DeliveriesTab() {
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer #</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tracking #</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Received By</th>
@@ -489,6 +497,9 @@ function DeliveriesTab() {
                               <div className="font-medium text-gray-900">{delivery.first_name} {delivery.last_name}</div>
                               <div className="text-sm text-gray-500">{delivery.email}</div>
                             </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="font-semibold text-blue-700">{delivery.customer_number || `#${delivery.user_id}`}</span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="font-mono text-sm font-medium text-blue-600">{delivery.tracking_number}</span>
@@ -522,6 +533,7 @@ function DeliveriesTab() {
                       <div className="flex-1">
                         <h4 className="font-bold text-gray-900 text-lg">{delivery.first_name} {delivery.last_name}</h4>
                         <p className="text-sm text-gray-600">{delivery.email}</p>
+                        <p className="text-sm font-semibold text-blue-700 mt-1">{delivery.customer_number || `#${delivery.user_id}`}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-bold text-green-600">{formatCurrency(delivery.finalcost)}</p>

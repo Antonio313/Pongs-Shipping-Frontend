@@ -76,11 +76,11 @@ export const generatePackageLabelPDF = (packageData, customerData) => {
 
     yPosition += 8;
 
-    // Customer ID
+    // Customer Number
     doc.setFont('helvetica', 'bold');
-    doc.text('Customer ID:', 25, yPosition);
+    doc.text('Customer Number:', 25, yPosition);
     doc.setFont('helvetica', 'normal');
-    doc.text(customerData.user_id.toString(), 70, yPosition);
+    doc.text(customerData.customer_number || `#${customerData.user_id}`, 70, yPosition);
 
     yPosition += 8;
 
